@@ -14,7 +14,7 @@ Dual-режим: HTTP REST API + gRPC для видеостриминга.
 
 Как в [user-service](https://github.com/psds-microservice/user-service):
 
-- **[psds-microservice/infra](https://github.com/psds-microservice/infra)**: образ для генерации proto. Инфра **не хранится** в проекте — при `make proto` используется `infra/` submodule (если есть) или клонируется репозиторий, собирается Docker-образ, генерируется код.
+- **[psds-microservice/infra](https://github.com/psds-microservice/infra)**: образ для генерации proto. Инфра **не хранится** в проекте — при `make proto-build` клонируется во временную папку, собирается образ, папка удаляется.
 - `common.proto`, `video.proto`, `client_info.proto` хранятся локально в `pkg/api_gateway/`. Без зависимости от helpy.
 
 ## Установка protoc-плагинов

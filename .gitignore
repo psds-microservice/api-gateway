@@ -14,8 +14,10 @@
 # Go
 /vendor/
 
-# Proto: клонированный infra при make proto-build
+# Build artifacts, air config (make dev)
 build/
+# Infra не хранится в проекте (клонируется во временную папку при make proto-build)
+infra/
 
 # OS
 .DS_Store

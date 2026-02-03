@@ -45,18 +45,15 @@ proto-openapi:
 		$(PROTO_ROOT)/video.proto $(PROTO_ROOT)/client_info.proto
 	@if [ -f $(OPENAPI_OUT)/openapi.swagger.json ]; then cp $(OPENAPI_OUT)/openapi.swagger.json $(OPENAPI_OUT)/openapi.json; echo "OpenAPI: $(OPENAPI_SPEC)"; elif [ -f $(OPENAPI_OUT)/openapi.json ]; then echo "OpenAPI: $(OPENAPI_SPEC)"; else echo "Проверьте вывод protoc выше"; fi
 
-# Сборка образа: из локального infra/ (submodule) или клонирование psds-microservice/infra
+# Сборка образа: infra клонируется во временную папку, не в проект
+INFRA_TMP := $(or $(TMPDIR),/tmp)/api-gateway-infra-build
 proto-build:
 	@echo "Building protoc-go image..."
-	@if [ -f infra/protoc-go.Dockerfile ]; then \
-		echo "Using local infra/ (submodule)..."; \
-		docker build -t $(PROTOC_IMAGE) -f infra/protoc-go.Dockerfile .; \
-	else \
-		echo "Cloning psds-microservice/infra..."; \
-		rm -rf build/infra-repo && mkdir -p build && git clone --depth 1 https://github.com/psds-microservice/infra.git build/infra-repo && \
-		mkdir -p build/infra-repo/infra && cp build/infra-repo/docker-entrypoint.sh build/infra-repo/infra/ && \
-		docker build -t $(PROTOC_IMAGE) -f build/infra-repo/protoc-go.Dockerfile build/infra-repo; \
-	fi
+	@rm -rf "$(INFRA_TMP)" && mkdir -p "$(INFRA_TMP)" && \
+		git clone --depth 1 https://github.com/psds-microservice/infra.git "$(INFRA_TMP)/repo" && \
+		mkdir -p "$(INFRA_TMP)/repo/infra" && cp "$(INFRA_TMP)/repo/docker-entrypoint.sh" "$(INFRA_TMP)/repo/infra/" && \
+		docker build -t $(PROTOC_IMAGE) -f "$(INFRA_TMP)/repo/protoc-go.Dockerfile" "$(INFRA_TMP)/repo" && \
+		rm -rf "$(INFRA_TMP)"
 	@echo "Docker image built"
 
 # Генерация: локальный protoc или Docker
