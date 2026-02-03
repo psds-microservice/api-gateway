@@ -1,0 +1,1 @@
+# Run `make proto` to generate .pb.go files from pkg/api_gateway/*.proto
