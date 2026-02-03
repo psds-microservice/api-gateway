@@ -10,7 +10,6 @@ import (
 
 	"github.com/psds-microservice/api-gateway/internal/controller"
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
-	"github.com/psds-microservice/helpy"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -133,7 +132,7 @@ func (s *VideoStreamServer) StreamVideo(stream pb.VideoStreamService_StreamVideo
 }
 
 // SendFrame единичный кадр (обратная совместимость)
-func (s *VideoStreamServer) SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*helpy.ApiResponse, error) {
+func (s *VideoStreamServer) SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*pb.ApiResponse, error) {
 	s.logger.Info("gRPC SendFrame called",
 		zap.String("stream_id", req.StreamId),
 		zap.String("client_id", req.ClientId))
@@ -146,7 +145,7 @@ func (s *VideoStreamServer) StartStream(ctx context.Context, req *pb.StartStream
 }
 
 // StopStream остановка стрима
-func (s *VideoStreamServer) StopStream(ctx context.Context, req *pb.StopStreamRequest) (*helpy.ApiResponse, error) {
+func (s *VideoStreamServer) StopStream(ctx context.Context, req *pb.StopStreamRequest) (*pb.ApiResponse, error) {
 	return s.service.StopStream(ctx, req)
 }
 
@@ -166,8 +165,51 @@ func (s *VideoStreamServer) GetStreamStats(ctx context.Context, req *pb.GetStrea
 	return s.service.GetStreamStats(ctx, req)
 }
 
-// Run запускает gRPC сервер
+// GetStreamsByClient стримы клиента
+func (s *VideoStreamServer) GetStreamsByClient(ctx context.Context, req *pb.GetStreamsByClientRequest) (*pb.GetStreamsByClientResponse, error) {
+	streams := s.service.GetStreamsByClient(req.ClientId)
+	return &pb.GetStreamsByClientResponse{Streams: streams}, nil
+}
+
+// GetStream информация о стриме
+func (s *VideoStreamServer) GetStream(ctx context.Context, req *pb.GetStreamRequest) (*pb.ActiveStream, error) {
+	stream := s.service.GetStream(req.StreamId)
+	if stream == nil {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("stream %s not found", req.StreamId))
+	}
+	return stream, nil
+}
+
+// GetAllStats общая статистика
+func (s *VideoStreamServer) GetAllStats(ctx context.Context, req *pb.EmptyRequest) (*pb.GetAllStatsResponse, error) {
+	stats := s.service.GetAllStats()
+	total := s.service.GetTotalStats()
+	var totalFrames, totalBytes int64
+	if f, ok := total["total_frames"].(int64); ok {
+		totalFrames = f
+	}
+	if b, ok := total["total_bytes"].(int64); ok {
+		totalBytes = b
+	}
+	var avgFPS float32
+	if a, ok := total["average_fps"].(float32); ok {
+		avgFPS = a
+	}
+	return &pb.GetAllStatsResponse{
+		Stats:       stats,
+		TotalFrames: totalFrames,
+		TotalBytes:  totalBytes,
+		AverageFps:  avgFPS,
+	}, nil
+}
+
+// Run запускает gRPC сервер (только VideoStreamService)
 func (s *VideoStreamServer) Run(port string) error {
+	return RunGRPC(port, s, nil, s.logger)
+}
+
+// RunGRPC запускает gRPC сервер с Video и ClientInfo сервисами
+func RunGRPC(port string, videoServer *VideoStreamServer, clientInfoServer *ClientInfoServer, logger *zap.Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
@@ -177,8 +219,13 @@ func (s *VideoStreamServer) Run(port string) error {
 		grpc.MaxRecvMsgSize(50*1024*1024), // 50MB для видео
 		grpc.MaxSendMsgSize(10*1024*1024), // 10MB
 	)
-	pb.RegisterVideoStreamServiceServer(grpcServer, s)
+	pb.RegisterVideoStreamServiceServer(grpcServer, videoServer)
+	if clientInfoServer != nil {
+		pb.RegisterClientInfoServiceServer(grpcServer, clientInfoServer)
+	}
 
-	s.logger.Info("Starting gRPC server", zap.String("port", port))
+	if logger != nil {
+		logger.Info("Starting gRPC server", zap.String("port", port))
+	}
 	return grpcServer.Serve(lis)
 }

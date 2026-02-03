@@ -8,7 +8,6 @@ import (
 
 	"github.com/psds-microservice/api-gateway/internal/grpc_client"
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
-	"github.com/psds-microservice/helpy"
 	"go.uber.org/zap"
 )
 
@@ -66,7 +65,7 @@ func (s *VideoStreamServiceImpl) StartStream(ctx context.Context, req *pb.StartS
 	}, nil
 }
 
-func (s *VideoStreamServiceImpl) SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*helpy.ApiResponse, error) {
+func (s *VideoStreamServiceImpl) SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*pb.ApiResponse, error) {
 	streamID := req.StreamId
 	clientID := req.ClientId
 	userName := req.UserName
@@ -77,9 +76,9 @@ func (s *VideoStreamServiceImpl) SendFrame(ctx context.Context, req *pb.SendFram
 }
 
 // SendFrameInternal внутренний метод обработки кадра
-func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName string, frame *pb.VideoFrame) (*helpy.ApiResponse, error) {
+func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error) {
 	if frame == nil {
-		return &helpy.ApiResponse{Status: "error", Message: "Frame is nil"}, nil
+		return &pb.ApiResponse{Status: "error", Message: "Frame is nil"}, nil
 	}
 
 	s.mu.RLock()
@@ -95,7 +94,7 @@ func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName 
 		if s.userClient != nil {
 			user, err := s.userClient.GetUserByClientID(context.Background(), clientID)
 			if err != nil {
-				return &helpy.ApiResponse{Status: "error", Message: fmt.Sprintf("User validation failed: %v", err)}, nil
+				return &pb.ApiResponse{Status: "error", Message: fmt.Sprintf("User validation failed: %v", err)}, nil
 			}
 			userNameToUse = user.Username
 		}
@@ -124,7 +123,7 @@ func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName 
 		zap.Int64("total_frames", stats.FramesReceived),
 		zap.Int64("total_bytes", stats.BytesReceived))
 
-	return &helpy.ApiResponse{
+	return &pb.ApiResponse{
 		Status:    "ok",
 		Message:   "Frame received",
 		Timestamp: time.Now().Unix(),
@@ -139,12 +138,12 @@ func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName 
 	}, nil
 }
 
-func (s *VideoStreamServiceImpl) StopStream(ctx context.Context, req *pb.StopStreamRequest) (*helpy.ApiResponse, error) {
+func (s *VideoStreamServiceImpl) StopStream(ctx context.Context, req *pb.StopStreamRequest) (*pb.ApiResponse, error) {
 	s.logger.Info("Stopping stream",
 		zap.String("stream_id", req.StreamId),
 		zap.String("client_id", req.ClientId))
 	s.repo.RemoveStream(req.StreamId)
-	return &helpy.ApiResponse{
+	return &pb.ApiResponse{
 		Status:    "ok",
 		Message:   fmt.Sprintf("Stream %s stopped", req.StreamId),
 		Timestamp: time.Now().Unix(),
@@ -183,6 +182,10 @@ func (s *VideoStreamServiceImpl) GetStreamsByClient(clientID string) []*pb.Activ
 		}
 	}
 	return clientStreams
+}
+
+func (s *VideoStreamServiceImpl) GetStream(streamID string) *pb.ActiveStream {
+	return s.repo.GetStream(streamID)
 }
 
 func (s *VideoStreamServiceImpl) GetActiveStreamsCount() int {

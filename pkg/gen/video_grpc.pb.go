@@ -8,7 +8,6 @@ package gen
 
 import (
 	context "context"
-	helpy "github.com/psds-microservice/helpy"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,12 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	VideoStreamService_StreamVideo_FullMethodName      = "/video_stream.VideoStreamService/StreamVideo"
-	VideoStreamService_SendFrame_FullMethodName        = "/video_stream.VideoStreamService/SendFrame"
-	VideoStreamService_StartStream_FullMethodName      = "/video_stream.VideoStreamService/StartStream"
-	VideoStreamService_StopStream_FullMethodName       = "/video_stream.VideoStreamService/StopStream"
-	VideoStreamService_GetActiveStreams_FullMethodName = "/video_stream.VideoStreamService/GetActiveStreams"
-	VideoStreamService_GetStreamStats_FullMethodName   = "/video_stream.VideoStreamService/GetStreamStats"
+	VideoStreamService_StreamVideo_FullMethodName        = "/video_stream.VideoStreamService/StreamVideo"
+	VideoStreamService_SendFrame_FullMethodName          = "/video_stream.VideoStreamService/SendFrame"
+	VideoStreamService_StartStream_FullMethodName        = "/video_stream.VideoStreamService/StartStream"
+	VideoStreamService_StopStream_FullMethodName         = "/video_stream.VideoStreamService/StopStream"
+	VideoStreamService_GetActiveStreams_FullMethodName   = "/video_stream.VideoStreamService/GetActiveStreams"
+	VideoStreamService_GetStreamStats_FullMethodName     = "/video_stream.VideoStreamService/GetStreamStats"
+	VideoStreamService_GetStreamsByClient_FullMethodName = "/video_stream.VideoStreamService/GetStreamsByClient"
+	VideoStreamService_GetStream_FullMethodName          = "/video_stream.VideoStreamService/GetStream"
+	VideoStreamService_GetAllStats_FullMethodName        = "/video_stream.VideoStreamService/GetAllStats"
 )
 
 // VideoStreamServiceClient is the client API for VideoStreamService service.
@@ -33,11 +35,14 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VideoStreamServiceClient interface {
 	StreamVideo(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[VideoChunk, ChunkAck], error)
-	SendFrame(ctx context.Context, in *SendFrameRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error)
+	SendFrame(ctx context.Context, in *SendFrameRequest, opts ...grpc.CallOption) (*ApiResponse, error)
 	StartStream(ctx context.Context, in *StartStreamRequest, opts ...grpc.CallOption) (*StartStreamResponse, error)
-	StopStream(ctx context.Context, in *StopStreamRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error)
+	StopStream(ctx context.Context, in *StopStreamRequest, opts ...grpc.CallOption) (*ApiResponse, error)
 	GetActiveStreams(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ActiveStream], error)
 	GetStreamStats(ctx context.Context, in *GetStreamStatsRequest, opts ...grpc.CallOption) (*StreamStats, error)
+	GetStreamsByClient(ctx context.Context, in *GetStreamsByClientRequest, opts ...grpc.CallOption) (*GetStreamsByClientResponse, error)
+	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*ActiveStream, error)
+	GetAllStats(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*GetAllStatsResponse, error)
 }
 
 type videoStreamServiceClient struct {
@@ -61,9 +66,9 @@ func (c *videoStreamServiceClient) StreamVideo(ctx context.Context, opts ...grpc
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type VideoStreamService_StreamVideoClient = grpc.BidiStreamingClient[VideoChunk, ChunkAck]
 
-func (c *videoStreamServiceClient) SendFrame(ctx context.Context, in *SendFrameRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error) {
+func (c *videoStreamServiceClient) SendFrame(ctx context.Context, in *SendFrameRequest, opts ...grpc.CallOption) (*ApiResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(helpy.ApiResponse)
+	out := new(ApiResponse)
 	err := c.cc.Invoke(ctx, VideoStreamService_SendFrame_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -81,9 +86,9 @@ func (c *videoStreamServiceClient) StartStream(ctx context.Context, in *StartStr
 	return out, nil
 }
 
-func (c *videoStreamServiceClient) StopStream(ctx context.Context, in *StopStreamRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error) {
+func (c *videoStreamServiceClient) StopStream(ctx context.Context, in *StopStreamRequest, opts ...grpc.CallOption) (*ApiResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(helpy.ApiResponse)
+	out := new(ApiResponse)
 	err := c.cc.Invoke(ctx, VideoStreamService_StopStream_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -120,16 +125,49 @@ func (c *videoStreamServiceClient) GetStreamStats(ctx context.Context, in *GetSt
 	return out, nil
 }
 
+func (c *videoStreamServiceClient) GetStreamsByClient(ctx context.Context, in *GetStreamsByClientRequest, opts ...grpc.CallOption) (*GetStreamsByClientResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetStreamsByClientResponse)
+	err := c.cc.Invoke(ctx, VideoStreamService_GetStreamsByClient_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoStreamServiceClient) GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*ActiveStream, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActiveStream)
+	err := c.cc.Invoke(ctx, VideoStreamService_GetStream_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoStreamServiceClient) GetAllStats(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*GetAllStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAllStatsResponse)
+	err := c.cc.Invoke(ctx, VideoStreamService_GetAllStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VideoStreamServiceServer is the server API for VideoStreamService service.
 // All implementations must embed UnimplementedVideoStreamServiceServer
 // for forward compatibility.
 type VideoStreamServiceServer interface {
 	StreamVideo(grpc.BidiStreamingServer[VideoChunk, ChunkAck]) error
-	SendFrame(context.Context, *SendFrameRequest) (*helpy.ApiResponse, error)
+	SendFrame(context.Context, *SendFrameRequest) (*ApiResponse, error)
 	StartStream(context.Context, *StartStreamRequest) (*StartStreamResponse, error)
-	StopStream(context.Context, *StopStreamRequest) (*helpy.ApiResponse, error)
+	StopStream(context.Context, *StopStreamRequest) (*ApiResponse, error)
 	GetActiveStreams(*EmptyRequest, grpc.ServerStreamingServer[ActiveStream]) error
 	GetStreamStats(context.Context, *GetStreamStatsRequest) (*StreamStats, error)
+	GetStreamsByClient(context.Context, *GetStreamsByClientRequest) (*GetStreamsByClientResponse, error)
+	GetStream(context.Context, *GetStreamRequest) (*ActiveStream, error)
+	GetAllStats(context.Context, *EmptyRequest) (*GetAllStatsResponse, error)
 	mustEmbedUnimplementedVideoStreamServiceServer()
 }
 
@@ -143,13 +181,13 @@ type UnimplementedVideoStreamServiceServer struct{}
 func (UnimplementedVideoStreamServiceServer) StreamVideo(grpc.BidiStreamingServer[VideoChunk, ChunkAck]) error {
 	return status.Error(codes.Unimplemented, "method StreamVideo not implemented")
 }
-func (UnimplementedVideoStreamServiceServer) SendFrame(context.Context, *SendFrameRequest) (*helpy.ApiResponse, error) {
+func (UnimplementedVideoStreamServiceServer) SendFrame(context.Context, *SendFrameRequest) (*ApiResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendFrame not implemented")
 }
 func (UnimplementedVideoStreamServiceServer) StartStream(context.Context, *StartStreamRequest) (*StartStreamResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method StartStream not implemented")
 }
-func (UnimplementedVideoStreamServiceServer) StopStream(context.Context, *StopStreamRequest) (*helpy.ApiResponse, error) {
+func (UnimplementedVideoStreamServiceServer) StopStream(context.Context, *StopStreamRequest) (*ApiResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method StopStream not implemented")
 }
 func (UnimplementedVideoStreamServiceServer) GetActiveStreams(*EmptyRequest, grpc.ServerStreamingServer[ActiveStream]) error {
@@ -157,6 +195,15 @@ func (UnimplementedVideoStreamServiceServer) GetActiveStreams(*EmptyRequest, grp
 }
 func (UnimplementedVideoStreamServiceServer) GetStreamStats(context.Context, *GetStreamStatsRequest) (*StreamStats, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetStreamStats not implemented")
+}
+func (UnimplementedVideoStreamServiceServer) GetStreamsByClient(context.Context, *GetStreamsByClientRequest) (*GetStreamsByClientResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetStreamsByClient not implemented")
+}
+func (UnimplementedVideoStreamServiceServer) GetStream(context.Context, *GetStreamRequest) (*ActiveStream, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetStream not implemented")
+}
+func (UnimplementedVideoStreamServiceServer) GetAllStats(context.Context, *EmptyRequest) (*GetAllStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAllStats not implemented")
 }
 func (UnimplementedVideoStreamServiceServer) mustEmbedUnimplementedVideoStreamServiceServer() {}
 func (UnimplementedVideoStreamServiceServer) testEmbeddedByValue()                            {}
@@ -269,6 +316,60 @@ func _VideoStreamService_GetStreamStats_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VideoStreamService_GetStreamsByClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStreamsByClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoStreamServiceServer).GetStreamsByClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoStreamService_GetStreamsByClient_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoStreamServiceServer).GetStreamsByClient(ctx, req.(*GetStreamsByClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VideoStreamService_GetStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStreamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoStreamServiceServer).GetStream(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoStreamService_GetStream_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoStreamServiceServer).GetStream(ctx, req.(*GetStreamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VideoStreamService_GetAllStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmptyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoStreamServiceServer).GetAllStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoStreamService_GetAllStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoStreamServiceServer).GetAllStats(ctx, req.(*EmptyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VideoStreamService_ServiceDesc is the grpc.ServiceDesc for VideoStreamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -291,6 +392,18 @@ var VideoStreamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStreamStats",
 			Handler:    _VideoStreamService_GetStreamStats_Handler,
+		},
+		{
+			MethodName: "GetStreamsByClient",
+			Handler:    _VideoStreamService_GetStreamsByClient_Handler,
+		},
+		{
+			MethodName: "GetStream",
+			Handler:    _VideoStreamService_GetStream_Handler,
+		},
+		{
+			MethodName: "GetAllStats",
+			Handler:    _VideoStreamService_GetAllStats_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

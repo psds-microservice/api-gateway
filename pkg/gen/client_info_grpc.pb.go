@@ -8,7 +8,6 @@ package gen
 
 import (
 	context "context"
-	helpy "github.com/psds-microservice/helpy"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -31,9 +30,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClientInfoServiceClient interface {
-	ClientConnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*helpy.ApiResponse, error)
-	ClientDisconnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*helpy.ApiResponse, error)
-	UpdateClientInfo(ctx context.Context, in *UpdateClientRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error)
+	ClientConnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*ApiResponse, error)
+	ClientDisconnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*ApiResponse, error)
+	UpdateClientInfo(ctx context.Context, in *UpdateClientRequest, opts ...grpc.CallOption) (*ApiResponse, error)
 	GetClientInfo(ctx context.Context, in *GetClientInfoRequest, opts ...grpc.CallOption) (*ClientInfo, error)
 	ListActiveClients(ctx context.Context, in *ListClientsRequest, opts ...grpc.CallOption) (*ListClientsResponse, error)
 }
@@ -46,9 +45,9 @@ func NewClientInfoServiceClient(cc grpc.ClientConnInterface) ClientInfoServiceCl
 	return &clientInfoServiceClient{cc}
 }
 
-func (c *clientInfoServiceClient) ClientConnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*helpy.ApiResponse, error) {
+func (c *clientInfoServiceClient) ClientConnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*ApiResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(helpy.ApiResponse)
+	out := new(ApiResponse)
 	err := c.cc.Invoke(ctx, ClientInfoService_ClientConnected_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -56,9 +55,9 @@ func (c *clientInfoServiceClient) ClientConnected(ctx context.Context, in *Conne
 	return out, nil
 }
 
-func (c *clientInfoServiceClient) ClientDisconnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*helpy.ApiResponse, error) {
+func (c *clientInfoServiceClient) ClientDisconnected(ctx context.Context, in *ConnectionEvent, opts ...grpc.CallOption) (*ApiResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(helpy.ApiResponse)
+	out := new(ApiResponse)
 	err := c.cc.Invoke(ctx, ClientInfoService_ClientDisconnected_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -66,9 +65,9 @@ func (c *clientInfoServiceClient) ClientDisconnected(ctx context.Context, in *Co
 	return out, nil
 }
 
-func (c *clientInfoServiceClient) UpdateClientInfo(ctx context.Context, in *UpdateClientRequest, opts ...grpc.CallOption) (*helpy.ApiResponse, error) {
+func (c *clientInfoServiceClient) UpdateClientInfo(ctx context.Context, in *UpdateClientRequest, opts ...grpc.CallOption) (*ApiResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(helpy.ApiResponse)
+	out := new(ApiResponse)
 	err := c.cc.Invoke(ctx, ClientInfoService_UpdateClientInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -100,9 +99,9 @@ func (c *clientInfoServiceClient) ListActiveClients(ctx context.Context, in *Lis
 // All implementations must embed UnimplementedClientInfoServiceServer
 // for forward compatibility.
 type ClientInfoServiceServer interface {
-	ClientConnected(context.Context, *ConnectionEvent) (*helpy.ApiResponse, error)
-	ClientDisconnected(context.Context, *ConnectionEvent) (*helpy.ApiResponse, error)
-	UpdateClientInfo(context.Context, *UpdateClientRequest) (*helpy.ApiResponse, error)
+	ClientConnected(context.Context, *ConnectionEvent) (*ApiResponse, error)
+	ClientDisconnected(context.Context, *ConnectionEvent) (*ApiResponse, error)
+	UpdateClientInfo(context.Context, *UpdateClientRequest) (*ApiResponse, error)
 	GetClientInfo(context.Context, *GetClientInfoRequest) (*ClientInfo, error)
 	ListActiveClients(context.Context, *ListClientsRequest) (*ListClientsResponse, error)
 	mustEmbedUnimplementedClientInfoServiceServer()
@@ -115,13 +114,13 @@ type ClientInfoServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedClientInfoServiceServer struct{}
 
-func (UnimplementedClientInfoServiceServer) ClientConnected(context.Context, *ConnectionEvent) (*helpy.ApiResponse, error) {
+func (UnimplementedClientInfoServiceServer) ClientConnected(context.Context, *ConnectionEvent) (*ApiResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClientConnected not implemented")
 }
-func (UnimplementedClientInfoServiceServer) ClientDisconnected(context.Context, *ConnectionEvent) (*helpy.ApiResponse, error) {
+func (UnimplementedClientInfoServiceServer) ClientDisconnected(context.Context, *ConnectionEvent) (*ApiResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClientDisconnected not implemented")
 }
-func (UnimplementedClientInfoServiceServer) UpdateClientInfo(context.Context, *UpdateClientRequest) (*helpy.ApiResponse, error) {
+func (UnimplementedClientInfoServiceServer) UpdateClientInfo(context.Context, *UpdateClientRequest) (*ApiResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateClientInfo not implemented")
 }
 func (UnimplementedClientInfoServiceServer) GetClientInfo(context.Context, *GetClientInfoRequest) (*ClientInfo, error) {

@@ -12,8 +12,10 @@ Dual-режим: HTTP REST API + gRPC для видеостриминга.
 
 ## Инфраструктура (psds)
 
-- **[psds-microservice/infra](https://github.com/psds-microservice/infra)**: образ для генерации proto (`infra/protoc-go.Dockerfile`, `infra/docker-entrypoint.sh`). `make proto-docker` и `make proto-docker-cmd` собирают образ и генерируют код с учётом helpy.
-- **[psds-microservice/helpy](https://github.com/psds-microservice/helpy)**: общий тип `ApiResponse` и `common.proto`. Проект зависит от `github.com/psds-microservice/helpy`; при генерации proto `common.proto` подключается из модуля helpy (путь из `go list -m`), в коде используется `helpy.ApiResponse`. Локальный `common.proto` не хранится — только `video.proto` и `client_info.proto` в `pkg/api_gateway/`.
+Как в [user-service](https://github.com/psds-microservice/user-service):
+
+- **[psds-microservice/infra](https://github.com/psds-microservice/infra)**: образ для генерации proto. Инфра **не хранится** в проекте — при `make proto` используется `infra/` submodule (если есть) или клонируется репозиторий, собирается Docker-образ, генерируется код.
+- `common.proto`, `video.proto`, `client_info.proto` хранятся локально в `pkg/api_gateway/`. Без зависимости от helpy.
 
 ## Установка protoc-плагинов
 
@@ -27,17 +29,15 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ## Сборка
 
 ```bash
-# Скачать зависимости (в т.ч. helpy для common.proto)
 go mod download
 
-# Генерация proto (common из helpy, только video + client_info)
+# Генерация proto (как в user-service: local protoc или Docker)
 make proto
-# или через Docker (образ из psds-microservice/infra, helpy монтируется из go mod):
-make proto-docker
 
-# Сборка
 make build
 ```
+
+Windows: можно использовать `.\scripts\proto-gen.ps1` вместо `make proto`.
 
 ## Запуск
 

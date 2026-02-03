@@ -4,6 +4,7 @@ package video_stream;
 option go_package = "github.com/psds-microservice/api-gateway/pkg/gen";
 
 import "common.proto";
+import "google/api/annotations.proto";
 
 // Пустой запрос
 message EmptyRequest {}
@@ -101,11 +102,47 @@ message GetStreamStatsRequest {
   string client_id = 2;
 }
 
+message GetStreamsByClientRequest {
+  string client_id = 1;
+}
+
+message GetStreamsByClientResponse {
+  repeated ActiveStream streams = 1;
+}
+
+message GetStreamRequest {
+  string stream_id = 1;
+}
+
+message GetAllStatsResponse {
+  repeated StreamStats stats = 1;
+  int64 total_frames = 2;
+  int64 total_bytes = 3;
+  float average_fps = 4;
+}
+
 service VideoStreamService {
   rpc StreamVideo(stream VideoChunk) returns (stream ChunkAck);
-  rpc SendFrame(SendFrameRequest) returns (common.ApiResponse);
-  rpc StartStream(StartStreamRequest) returns (StartStreamResponse);
-  rpc StopStream(StopStreamRequest) returns (common.ApiResponse);
+  rpc SendFrame(SendFrameRequest) returns (common.ApiResponse) {
+    option (google.api.http) = { post: "/api/v1/video/frame" body: "*" };
+  }
+  rpc StartStream(StartStreamRequest) returns (StartStreamResponse) {
+    option (google.api.http) = { post: "/api/v1/video/start" body: "*" };
+  }
+  rpc StopStream(StopStreamRequest) returns (common.ApiResponse) {
+    option (google.api.http) = { post: "/api/v1/video/stop" body: "*" };
+  }
   rpc GetActiveStreams(EmptyRequest) returns (stream ActiveStream);
-  rpc GetStreamStats(GetStreamStatsRequest) returns (StreamStats);
+  rpc GetStreamStats(GetStreamStatsRequest) returns (StreamStats) {
+    option (google.api.http) = { get: "/api/v1/video/stats/{client_id}" };
+  }
+  rpc GetStreamsByClient(GetStreamsByClientRequest) returns (GetStreamsByClientResponse) {
+    option (google.api.http) = { get: "/api/v1/video/client/{client_id}/streams" };
+  }
+  rpc GetStream(GetStreamRequest) returns (ActiveStream) {
+    option (google.api.http) = { get: "/api/v1/video/stream/{stream_id}" };
+  }
+  rpc GetAllStats(EmptyRequest) returns (GetAllStatsResponse) {
+    option (google.api.http) = { get: "/api/v1/video/all-stats" };
+  }
 }

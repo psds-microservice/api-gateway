@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"net/url"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -100,4 +102,17 @@ func GetDefaultYamlConfig() *YamlConfig {
 	cfg.UserService.MaxRetries = 3
 	cfg.UserService.RetryDelaySec = 1
 	return cfg
+}
+
+// DSN возвращает connection string для lib/pq
+func (c *YamlConfig) DSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Database.Host, c.Database.Port, c.Database.User, c.Database.Password, c.Database.Name, c.Database.SSLMode)
+}
+
+// DatabaseURL возвращает postgres URL для golang-migrate
+func (c *YamlConfig) DatabaseURL() string {
+	pass := url.QueryEscape(c.Database.Password)
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		c.Database.User, pass, c.Database.Host, c.Database.Port, c.Database.Name, c.Database.SSLMode)
 }

@@ -7,7 +7,7 @@
 package gen
 
 import (
-	helpy "github.com/psds-microservice/helpy"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -910,7 +910,7 @@ var File_client_info_proto protoreflect.FileDescriptor
 
 const file_client_info_proto_rawDesc = "" +
 	"\n" +
-	"\x11client_info.proto\x12\vclient_info\x1a\fcommon.proto\"\xe1\x0e\n" +
+	"\x11client_info.proto\x12\vclient_info\x1a\fcommon.proto\x1a\x1cgoogle/api/annotations.proto\"\xe1\x0e\n" +
 	"\n" +
 	"ClientInfo\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x17\n" +
@@ -1005,13 +1005,13 @@ const file_client_info_proto_rawDesc = "" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\"^\n" +
 	"\x13ListClientsResponse\x121\n" +
 	"\aclients\x18\x01 \x03(\v2\x17.client_info.ClientInfoR\aclients\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total2\x92\x03\n" +
-	"\x11ClientInfoService\x12D\n" +
-	"\x0fClientConnected\x12\x1c.client_info.ConnectionEvent\x1a\x13.common.ApiResponse\x12G\n" +
-	"\x12ClientDisconnected\x12\x1c.client_info.ConnectionEvent\x1a\x13.common.ApiResponse\x12I\n" +
-	"\x10UpdateClientInfo\x12 .client_info.UpdateClientRequest\x1a\x13.common.ApiResponse\x12K\n" +
-	"\rGetClientInfo\x12!.client_info.GetClientInfoRequest\x1a\x17.client_info.ClientInfo\x12V\n" +
-	"\x11ListActiveClients\x12\x1f.client_info.ListClientsRequest\x1a .client_info.ListClientsResponseB2Z0github.com/psds-microservice/api-gateway/pkg/genb\x06proto3"
+	"\x05total\x18\x02 \x01(\x05R\x05total2\xce\x04\n" +
+	"\x11ClientInfoService\x12j\n" +
+	"\x0fClientConnected\x12\x1c.client_info.ConnectionEvent\x1a\x13.common.ApiResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/clients/connected\x12p\n" +
+	"\x12ClientDisconnected\x12\x1c.client_info.ConnectionEvent\x1a\x13.common.ApiResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/clients/disconnected\x12q\n" +
+	"\x10UpdateClientInfo\x12 .client_info.UpdateClientRequest\x1a\x13.common.ApiResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\x1a\x1b/api/v1/clients/{client_id}\x12p\n" +
+	"\rGetClientInfo\x12!.client_info.GetClientInfoRequest\x1a\x17.client_info.ClientInfo\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/api/v1/clients/{client_id}\x12v\n" +
+	"\x11ListActiveClients\x12\x1f.client_info.ListClientsRequest\x1a .client_info.ListClientsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/api/v1/clients/activeB2Z0github.com/psds-microservice/api-gateway/pkg/genb\x06proto3"
 
 var (
 	file_client_info_proto_rawDescOnce sync.Once
@@ -1039,7 +1039,7 @@ var file_client_info_proto_goTypes = []any{
 	(*ClientInfo_ClientStats)(nil),        // 9: client_info.ClientInfo.ClientStats
 	(*ClientInfo_SecurityTags)(nil),       // 10: client_info.ClientInfo.SecurityTags
 	nil,                                   // 11: client_info.ClientInfo.CustomMetadataEntry
-	(*helpy.ApiResponse)(nil),             // 12: common.ApiResponse
+	(*ApiResponse)(nil),                   // 12: common.ApiResponse
 }
 var file_client_info_proto_depIdxs = []int32{
 	6,  // 0: client_info.ClientInfo.location:type_name -> client_info.ClientInfo.GeoLocation
@@ -1073,6 +1073,7 @@ func file_client_info_proto_init() {
 	if File_client_info_proto != nil {
 		return
 	}
+	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

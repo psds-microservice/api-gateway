@@ -19,7 +19,9 @@ func getEnvInt(key string, def int) int {
 
 // ApplyEnvOverrides применяет переменные окружения поверх конфига (env переопределяет YAML)
 func ApplyEnvOverrides(cfg *YamlConfig) {
-	if v := getEnv("HOST", ""); v != "" {
+	if v := getEnv("APP_HOST", ""); v != "" {
+		cfg.Host = v
+	} else if v := getEnv("HOST", ""); v != "" {
 		cfg.Host = v
 	}
 	if v := getEnv("HTTP_PORT", ""); v != "" {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
-	"github.com/psds-microservice/helpy"
 	"go.uber.org/zap"
 )
 
@@ -23,34 +22,34 @@ func NewClientInfoService(logger *zap.Logger) *ClientInfoServiceImpl {
 	}
 }
 
-func (s *ClientInfoServiceImpl) ClientConnected(ctx context.Context, req *pb.ConnectionEvent) (*helpy.ApiResponse, error) {
+func (s *ClientInfoServiceImpl) ClientConnected(ctx context.Context, req *pb.ConnectionEvent) (*pb.ApiResponse, error) {
 	s.logger.Info("Client connected",
 		zap.String("client_id", req.ClientId),
 		zap.String("ip", req.IpAddress))
 	s.repo.SaveClient(req.ClientInfo)
-	return &helpy.ApiResponse{
+	return &pb.ApiResponse{
 		Status:    "ok",
 		Message:   "Client connected successfully",
 		Timestamp: time.Now().Unix(),
 	}, nil
 }
 
-func (s *ClientInfoServiceImpl) ClientDisconnected(ctx context.Context, req *pb.ConnectionEvent) (*helpy.ApiResponse, error) {
+func (s *ClientInfoServiceImpl) ClientDisconnected(ctx context.Context, req *pb.ConnectionEvent) (*pb.ApiResponse, error) {
 	s.logger.Info("Client disconnected", zap.String("client_id", req.ClientId))
 	s.repo.RemoveClient(req.ClientId)
-	return &helpy.ApiResponse{
+	return &pb.ApiResponse{
 		Status:    "ok",
 		Message:   "Client disconnected",
 		Timestamp: time.Now().Unix(),
 	}, nil
 }
 
-func (s *ClientInfoServiceImpl) UpdateClientInfo(ctx context.Context, req *pb.UpdateClientRequest) (*helpy.ApiResponse, error) {
+func (s *ClientInfoServiceImpl) UpdateClientInfo(ctx context.Context, req *pb.UpdateClientRequest) (*pb.ApiResponse, error) {
 	s.logger.Info("Updating client info", zap.String("client_id", req.ClientId))
 	if req.ClientInfo != nil {
 		s.repo.SaveClient(req.ClientInfo)
 	}
-	return &helpy.ApiResponse{
+	return &pb.ApiResponse{
 		Status:    "ok",
 		Message:   "Client info updated",
 		Timestamp: time.Now().Unix(),

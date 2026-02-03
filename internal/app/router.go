@@ -3,14 +3,17 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/cors"
-	"go.uber.org/zap"
-
 	"github.com/psds-microservice/api-gateway/internal/config"
 	"github.com/psds-microservice/api-gateway/internal/handler"
+	"github.com/psds-microservice/api-gateway/pkg/constants"
+	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
 )
 
 // NewRouter создает роутер с маршрутами (dual HTTP + gRPC режим)
@@ -55,6 +58,15 @@ func NewRouter(
 	}
 
 	router.Static("/static", "./static")
+
+	// Swagger UI (OpenAPI из proto: make proto-openapi)
+	// Спека на отдельном пути, т.к. /swagger/*filepath конфликтует с /swagger/openapi.json в Gin
+	router.GET("/openapi.json", serveOpenAPISpec())
+	router.Any(constants.PathSwagger+"/*filepath", gin.WrapH(httpSwagger.Handler(
+		httpSwagger.URL("/openapi.json"),
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("list"),
+	)))
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -173,6 +185,30 @@ func NewRouter(
 	})
 
 	return cors.New(corsOpts).Handler(router)
+}
+
+// serveOpenAPISpec отдаёт api/openapi.json (из proto: make proto-openapi)
+func serveOpenAPISpec() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for _, path := range []string{"api/openapi.swagger.json", "api/openapi.json", "openapi.json"} {
+			data, err := os.ReadFile(path)
+			if err == nil {
+				c.Data(http.StatusOK, "application/json", data)
+				return
+			}
+		}
+		if exe, err := os.Executable(); err == nil && exe != "" {
+			dir := filepath.Dir(exe)
+			for _, name := range []string{"openapi.swagger.json", "openapi.json"} {
+				data, err := os.ReadFile(filepath.Join(dir, "api", name))
+				if err == nil {
+					c.Data(http.StatusOK, "application/json", data)
+					return
+				}
+			}
+		}
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "openapi.json not found. Run: make proto-openapi"})
+	}
 }
 
 // bodyLimitMiddleware ограничивает размер тела запроса (защита от OOM)

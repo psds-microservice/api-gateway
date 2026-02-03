@@ -7,7 +7,7 @@
 package gen
 
 import (
-	helpy "github.com/psds-microservice/helpy"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -902,11 +902,211 @@ func (x *GetStreamStatsRequest) GetClientId() string {
 	return ""
 }
 
+type GetStreamsByClientRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStreamsByClientRequest) Reset() {
+	*x = GetStreamsByClientRequest{}
+	mi := &file_video_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStreamsByClientRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStreamsByClientRequest) ProtoMessage() {}
+
+func (x *GetStreamsByClientRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_video_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStreamsByClientRequest.ProtoReflect.Descriptor instead.
+func (*GetStreamsByClientRequest) Descriptor() ([]byte, []int) {
+	return file_video_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetStreamsByClientRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+type GetStreamsByClientResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Streams       []*ActiveStream        `protobuf:"bytes,1,rep,name=streams,proto3" json:"streams,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStreamsByClientResponse) Reset() {
+	*x = GetStreamsByClientResponse{}
+	mi := &file_video_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStreamsByClientResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStreamsByClientResponse) ProtoMessage() {}
+
+func (x *GetStreamsByClientResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_video_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStreamsByClientResponse.ProtoReflect.Descriptor instead.
+func (*GetStreamsByClientResponse) Descriptor() ([]byte, []int) {
+	return file_video_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetStreamsByClientResponse) GetStreams() []*ActiveStream {
+	if x != nil {
+		return x.Streams
+	}
+	return nil
+}
+
+type GetStreamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StreamId      string                 `protobuf:"bytes,1,opt,name=stream_id,json=streamId,proto3" json:"stream_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStreamRequest) Reset() {
+	*x = GetStreamRequest{}
+	mi := &file_video_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStreamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStreamRequest) ProtoMessage() {}
+
+func (x *GetStreamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_video_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStreamRequest.ProtoReflect.Descriptor instead.
+func (*GetStreamRequest) Descriptor() ([]byte, []int) {
+	return file_video_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetStreamRequest) GetStreamId() string {
+	if x != nil {
+		return x.StreamId
+	}
+	return ""
+}
+
+type GetAllStatsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stats         []*StreamStats         `protobuf:"bytes,1,rep,name=stats,proto3" json:"stats,omitempty"`
+	TotalFrames   int64                  `protobuf:"varint,2,opt,name=total_frames,json=totalFrames,proto3" json:"total_frames,omitempty"`
+	TotalBytes    int64                  `protobuf:"varint,3,opt,name=total_bytes,json=totalBytes,proto3" json:"total_bytes,omitempty"`
+	AverageFps    float32                `protobuf:"fixed32,4,opt,name=average_fps,json=averageFps,proto3" json:"average_fps,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAllStatsResponse) Reset() {
+	*x = GetAllStatsResponse{}
+	mi := &file_video_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAllStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAllStatsResponse) ProtoMessage() {}
+
+func (x *GetAllStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_video_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAllStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetAllStatsResponse) Descriptor() ([]byte, []int) {
+	return file_video_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetAllStatsResponse) GetStats() []*StreamStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+func (x *GetAllStatsResponse) GetTotalFrames() int64 {
+	if x != nil {
+		return x.TotalFrames
+	}
+	return 0
+}
+
+func (x *GetAllStatsResponse) GetTotalBytes() int64 {
+	if x != nil {
+		return x.TotalBytes
+	}
+	return 0
+}
+
+func (x *GetAllStatsResponse) GetAverageFps() float32 {
+	if x != nil {
+		return x.AverageFps
+	}
+	return 0
+}
+
 var File_video_proto protoreflect.FileDescriptor
 
 const file_video_proto_rawDesc = "" +
 	"\n" +
-	"\vvideo.proto\x12\fvideo_stream\x1a\fcommon.proto\"\x0e\n" +
+	"\vvideo.proto\x12\fvideo_stream\x1a\fcommon.proto\x1a\x1cgoogle/api/annotations.proto\"\x0e\n" +
 	"\fEmptyRequest\"\xb7\x02\n" +
 	"\n" +
 	"VideoChunk\x12\x1b\n" +
@@ -1000,15 +1200,31 @@ const file_video_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Q\n" +
 	"\x15GetStreamStatsRequest\x12\x1b\n" +
 	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x1b\n" +
-	"\tclient_id\x18\x02 \x01(\tR\bclientId2\xd3\x03\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\"8\n" +
+	"\x19GetStreamsByClientRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\"R\n" +
+	"\x1aGetStreamsByClientResponse\x124\n" +
+	"\astreams\x18\x01 \x03(\v2\x1a.video_stream.ActiveStreamR\astreams\"/\n" +
+	"\x10GetStreamRequest\x12\x1b\n" +
+	"\tstream_id\x18\x01 \x01(\tR\bstreamId\"\xab\x01\n" +
+	"\x13GetAllStatsResponse\x12/\n" +
+	"\x05stats\x18\x01 \x03(\v2\x19.video_stream.StreamStatsR\x05stats\x12!\n" +
+	"\ftotal_frames\x18\x02 \x01(\x03R\vtotalFrames\x12\x1f\n" +
+	"\vtotal_bytes\x18\x03 \x01(\x03R\n" +
+	"totalBytes\x12\x1f\n" +
+	"\vaverage_fps\x18\x04 \x01(\x02R\n" +
+	"averageFps2\xd9\a\n" +
 	"\x12VideoStreamService\x12C\n" +
-	"\vStreamVideo\x12\x18.video_stream.VideoChunk\x1a\x16.video_stream.ChunkAck(\x010\x01\x12@\n" +
-	"\tSendFrame\x12\x1e.video_stream.SendFrameRequest\x1a\x13.common.ApiResponse\x12R\n" +
-	"\vStartStream\x12 .video_stream.StartStreamRequest\x1a!.video_stream.StartStreamResponse\x12B\n" +
+	"\vStreamVideo\x12\x18.video_stream.VideoChunk\x1a\x16.video_stream.ChunkAck(\x010\x01\x12`\n" +
+	"\tSendFrame\x12\x1e.video_stream.SendFrameRequest\x1a\x13.common.ApiResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/video/frame\x12r\n" +
+	"\vStartStream\x12 .video_stream.StartStreamRequest\x1a!.video_stream.StartStreamResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/video/start\x12a\n" +
 	"\n" +
-	"StopStream\x12\x1f.video_stream.StopStreamRequest\x1a\x13.common.ApiResponse\x12L\n" +
-	"\x10GetActiveStreams\x12\x1a.video_stream.EmptyRequest\x1a\x1a.video_stream.ActiveStream0\x01\x12P\n" +
-	"\x0eGetStreamStats\x12#.video_stream.GetStreamStatsRequest\x1a\x19.video_stream.StreamStatsB2Z0github.com/psds-microservice/api-gateway/pkg/genb\x06proto3"
+	"StopStream\x12\x1f.video_stream.StopStreamRequest\x1a\x13.common.ApiResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/video/stop\x12L\n" +
+	"\x10GetActiveStreams\x12\x1a.video_stream.EmptyRequest\x1a\x1a.video_stream.ActiveStream0\x01\x12y\n" +
+	"\x0eGetStreamStats\x12#.video_stream.GetStreamStatsRequest\x1a\x19.video_stream.StreamStats\"'\x82\xd3\xe4\x93\x02!\x12\x1f/api/v1/video/stats/{client_id}\x12\x99\x01\n" +
+	"\x12GetStreamsByClient\x12'.video_stream.GetStreamsByClientRequest\x1a(.video_stream.GetStreamsByClientResponse\"0\x82\xd3\xe4\x93\x02*\x12(/api/v1/video/client/{client_id}/streams\x12q\n" +
+	"\tGetStream\x12\x1e.video_stream.GetStreamRequest\x1a\x1a.video_stream.ActiveStream\"(\x82\xd3\xe4\x93\x02\"\x12 /api/v1/video/stream/{stream_id}\x12m\n" +
+	"\vGetAllStats\x12\x1a.video_stream.EmptyRequest\x1a!.video_stream.GetAllStatsResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/api/v1/video/all-statsB2Z0github.com/psds-microservice/api-gateway/pkg/genb\x06proto3"
 
 var (
 	file_video_proto_rawDescOnce sync.Once
@@ -1022,48 +1238,60 @@ func file_video_proto_rawDescGZIP() []byte {
 	return file_video_proto_rawDescData
 }
 
-var file_video_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_video_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_video_proto_goTypes = []any{
-	(*EmptyRequest)(nil),          // 0: video_stream.EmptyRequest
-	(*VideoChunk)(nil),            // 1: video_stream.VideoChunk
-	(*ChunkAck)(nil),              // 2: video_stream.ChunkAck
-	(*VideoFrame)(nil),            // 3: video_stream.VideoFrame
-	(*StartStreamRequest)(nil),    // 4: video_stream.StartStreamRequest
-	(*StartStreamResponse)(nil),   // 5: video_stream.StartStreamResponse
-	(*SendFrameRequest)(nil),      // 6: video_stream.SendFrameRequest
-	(*StopStreamRequest)(nil),     // 7: video_stream.StopStreamRequest
-	(*StreamStats)(nil),           // 8: video_stream.StreamStats
-	(*ActiveStream)(nil),          // 9: video_stream.ActiveStream
-	(*GetStreamStatsRequest)(nil), // 10: video_stream.GetStreamStatsRequest
-	nil,                           // 11: video_stream.VideoChunk.MetadataEntry
-	nil,                           // 12: video_stream.VideoFrame.MetadataEntry
-	nil,                           // 13: video_stream.StartStreamResponse.MetadataEntry
-	nil,                           // 14: video_stream.ActiveStream.MetadataEntry
-	(*helpy.ApiResponse)(nil),     // 15: common.ApiResponse
+	(*EmptyRequest)(nil),               // 0: video_stream.EmptyRequest
+	(*VideoChunk)(nil),                 // 1: video_stream.VideoChunk
+	(*ChunkAck)(nil),                   // 2: video_stream.ChunkAck
+	(*VideoFrame)(nil),                 // 3: video_stream.VideoFrame
+	(*StartStreamRequest)(nil),         // 4: video_stream.StartStreamRequest
+	(*StartStreamResponse)(nil),        // 5: video_stream.StartStreamResponse
+	(*SendFrameRequest)(nil),           // 6: video_stream.SendFrameRequest
+	(*StopStreamRequest)(nil),          // 7: video_stream.StopStreamRequest
+	(*StreamStats)(nil),                // 8: video_stream.StreamStats
+	(*ActiveStream)(nil),               // 9: video_stream.ActiveStream
+	(*GetStreamStatsRequest)(nil),      // 10: video_stream.GetStreamStatsRequest
+	(*GetStreamsByClientRequest)(nil),  // 11: video_stream.GetStreamsByClientRequest
+	(*GetStreamsByClientResponse)(nil), // 12: video_stream.GetStreamsByClientResponse
+	(*GetStreamRequest)(nil),           // 13: video_stream.GetStreamRequest
+	(*GetAllStatsResponse)(nil),        // 14: video_stream.GetAllStatsResponse
+	nil,                                // 15: video_stream.VideoChunk.MetadataEntry
+	nil,                                // 16: video_stream.VideoFrame.MetadataEntry
+	nil,                                // 17: video_stream.StartStreamResponse.MetadataEntry
+	nil,                                // 18: video_stream.ActiveStream.MetadataEntry
+	(*ApiResponse)(nil),                // 19: common.ApiResponse
 }
 var file_video_proto_depIdxs = []int32{
-	11, // 0: video_stream.VideoChunk.metadata:type_name -> video_stream.VideoChunk.MetadataEntry
-	12, // 1: video_stream.VideoFrame.metadata:type_name -> video_stream.VideoFrame.MetadataEntry
-	13, // 2: video_stream.StartStreamResponse.metadata:type_name -> video_stream.StartStreamResponse.MetadataEntry
+	15, // 0: video_stream.VideoChunk.metadata:type_name -> video_stream.VideoChunk.MetadataEntry
+	16, // 1: video_stream.VideoFrame.metadata:type_name -> video_stream.VideoFrame.MetadataEntry
+	17, // 2: video_stream.StartStreamResponse.metadata:type_name -> video_stream.StartStreamResponse.MetadataEntry
 	3,  // 3: video_stream.SendFrameRequest.frame:type_name -> video_stream.VideoFrame
-	14, // 4: video_stream.ActiveStream.metadata:type_name -> video_stream.ActiveStream.MetadataEntry
-	1,  // 5: video_stream.VideoStreamService.StreamVideo:input_type -> video_stream.VideoChunk
-	6,  // 6: video_stream.VideoStreamService.SendFrame:input_type -> video_stream.SendFrameRequest
-	4,  // 7: video_stream.VideoStreamService.StartStream:input_type -> video_stream.StartStreamRequest
-	7,  // 8: video_stream.VideoStreamService.StopStream:input_type -> video_stream.StopStreamRequest
-	0,  // 9: video_stream.VideoStreamService.GetActiveStreams:input_type -> video_stream.EmptyRequest
-	10, // 10: video_stream.VideoStreamService.GetStreamStats:input_type -> video_stream.GetStreamStatsRequest
-	2,  // 11: video_stream.VideoStreamService.StreamVideo:output_type -> video_stream.ChunkAck
-	15, // 12: video_stream.VideoStreamService.SendFrame:output_type -> common.ApiResponse
-	5,  // 13: video_stream.VideoStreamService.StartStream:output_type -> video_stream.StartStreamResponse
-	15, // 14: video_stream.VideoStreamService.StopStream:output_type -> common.ApiResponse
-	9,  // 15: video_stream.VideoStreamService.GetActiveStreams:output_type -> video_stream.ActiveStream
-	8,  // 16: video_stream.VideoStreamService.GetStreamStats:output_type -> video_stream.StreamStats
-	11, // [11:17] is the sub-list for method output_type
-	5,  // [5:11] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	18, // 4: video_stream.ActiveStream.metadata:type_name -> video_stream.ActiveStream.MetadataEntry
+	9,  // 5: video_stream.GetStreamsByClientResponse.streams:type_name -> video_stream.ActiveStream
+	8,  // 6: video_stream.GetAllStatsResponse.stats:type_name -> video_stream.StreamStats
+	1,  // 7: video_stream.VideoStreamService.StreamVideo:input_type -> video_stream.VideoChunk
+	6,  // 8: video_stream.VideoStreamService.SendFrame:input_type -> video_stream.SendFrameRequest
+	4,  // 9: video_stream.VideoStreamService.StartStream:input_type -> video_stream.StartStreamRequest
+	7,  // 10: video_stream.VideoStreamService.StopStream:input_type -> video_stream.StopStreamRequest
+	0,  // 11: video_stream.VideoStreamService.GetActiveStreams:input_type -> video_stream.EmptyRequest
+	10, // 12: video_stream.VideoStreamService.GetStreamStats:input_type -> video_stream.GetStreamStatsRequest
+	11, // 13: video_stream.VideoStreamService.GetStreamsByClient:input_type -> video_stream.GetStreamsByClientRequest
+	13, // 14: video_stream.VideoStreamService.GetStream:input_type -> video_stream.GetStreamRequest
+	0,  // 15: video_stream.VideoStreamService.GetAllStats:input_type -> video_stream.EmptyRequest
+	2,  // 16: video_stream.VideoStreamService.StreamVideo:output_type -> video_stream.ChunkAck
+	19, // 17: video_stream.VideoStreamService.SendFrame:output_type -> common.ApiResponse
+	5,  // 18: video_stream.VideoStreamService.StartStream:output_type -> video_stream.StartStreamResponse
+	19, // 19: video_stream.VideoStreamService.StopStream:output_type -> common.ApiResponse
+	9,  // 20: video_stream.VideoStreamService.GetActiveStreams:output_type -> video_stream.ActiveStream
+	8,  // 21: video_stream.VideoStreamService.GetStreamStats:output_type -> video_stream.StreamStats
+	12, // 22: video_stream.VideoStreamService.GetStreamsByClient:output_type -> video_stream.GetStreamsByClientResponse
+	9,  // 23: video_stream.VideoStreamService.GetStream:output_type -> video_stream.ActiveStream
+	14, // 24: video_stream.VideoStreamService.GetAllStats:output_type -> video_stream.GetAllStatsResponse
+	16, // [16:25] is the sub-list for method output_type
+	7,  // [7:16] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_video_proto_init() }
@@ -1071,13 +1299,14 @@ func file_video_proto_init() {
 	if File_video_proto != nil {
 		return
 	}
+	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_video_proto_rawDesc), len(file_video_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -4,6 +4,7 @@ package client_info;
 option go_package = "github.com/psds-microservice/api-gateway/pkg/gen";
 
 import "common.proto";
+import "google/api/annotations.proto";
 
 message ClientInfo {
   string client_id = 1;
@@ -101,9 +102,19 @@ message ListClientsResponse {
 }
 
 service ClientInfoService {
-  rpc ClientConnected(ConnectionEvent) returns (common.ApiResponse);
-  rpc ClientDisconnected(ConnectionEvent) returns (common.ApiResponse);
-  rpc UpdateClientInfo(UpdateClientRequest) returns (common.ApiResponse);
-  rpc GetClientInfo(GetClientInfoRequest) returns (ClientInfo);
-  rpc ListActiveClients(ListClientsRequest) returns (ListClientsResponse);
+  rpc ClientConnected(ConnectionEvent) returns (common.ApiResponse) {
+    option (google.api.http) = { post: "/api/v1/clients/connected" body: "*" };
+  }
+  rpc ClientDisconnected(ConnectionEvent) returns (common.ApiResponse) {
+    option (google.api.http) = { post: "/api/v1/clients/disconnected" body: "*" };
+  }
+  rpc UpdateClientInfo(UpdateClientRequest) returns (common.ApiResponse) {
+    option (google.api.http) = { put: "/api/v1/clients/{client_id}" body: "*" };
+  }
+  rpc GetClientInfo(GetClientInfoRequest) returns (ClientInfo) {
+    option (google.api.http) = { get: "/api/v1/clients/{client_id}" };
+  }
+  rpc ListActiveClients(ListClientsRequest) returns (ListClientsResponse) {
+    option (google.api.http) = { get: "/api/v1/clients/active" };
+  }
 }

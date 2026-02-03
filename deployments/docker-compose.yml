@@ -5,7 +5,11 @@ services:
       dockerfile: deployments/Dockerfile
     ports:
       - "8080:8080"
+      - "9090:9090"
     environment:
+      - APP_HOST=0.0.0.0
+      - PORT=8080
+      - GRPC_PORT=9090
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres

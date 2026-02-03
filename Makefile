@@ -1,9 +1,13 @@
-.PHONY: help proto build run run-dual tidy test dev clean update
+.PHONY: help proto build run run-dual tidy test dev clean update proto-build proto-generate proto-generate-local proto-generate-docker proto-openapi
 
 APP_NAME = api-gateway
 BIN_DIR = bin
 PROTO_ROOT = pkg/api_gateway
 GEN_DIR = pkg/gen
+GO_MODULE = github.com/psds-microservice/api-gateway
+PROTOC_IMAGE = local/protoc-go:latest
+OPENAPI_OUT = api
+OPENAPI_SPEC = $(OPENAPI_OUT)/openapi.json
 
 .DEFAULT_GOAL := help
 
@@ -11,57 +15,90 @@ help:
 	@echo "API Gateway - Makefile"
 	@echo ""
 	@echo "Commands:"
-	@echo "  make proto           - Generate Go code from proto (requires protoc + plugins)"
-	@echo "  make proto-docker     - Generate via Docker (image from psds-microservice/infra)"
-	@echo "  make proto-docker-cmd - Same via Docker with explicit protoc command"
+	@echo "  make proto        - Build image and generate proto (like user-service)"
+	@echo "  make proto-build  - Build protoc image from psds-microservice/infra"
+	@echo "  make proto-generate - Generate Go code (local protoc or Docker)"
+	@echo "  make proto-openapi - Generate OpenAPI/Swagger from proto"
 	@echo "  make build      - Build binary"
 	@echo "  make run        - Run HTTP server (simple mode)"
 	@echo "  make run-dual   - Run dual server (HTTP + gRPC)"
 	@echo "  make dev        - Run with hot reload (requires air)"
 	@echo "  make tidy       - go mod tidy"
 	@echo "  make test       - Run tests"
-	@echo "  make update     - Update dependencies (go get -u ./... && go mod tidy)"
+	@echo "  make update     - Update dependencies"
 	@echo "  make clean      - Clean build artifacts"
 
-# common.proto берётся из github.com/psds-microservice/helpy (см. HELPY_MOD)
-HELPY_MOD := github.com/psds-microservice/helpy
-HELPY_DIR := $(shell go list -m -f '{{.Dir}}' $(HELPY_MOD) 2>/dev/null)
+## Proto (как в user-service)
+proto: proto-build proto-generate
 
-proto:
-	@echo "Generating proto files (common from $(HELPY_MOD), requires protoc + plugins)..."
+## OpenAPI/Swagger из proto (единый источник — .proto)
+proto-openapi:
+	@command -v protoc >/dev/null 2>&1 || (echo "Установите protoc" && exit 1); \
+	command -v protoc-gen-openapiv2 >/dev/null 2>&1 || (echo "Установите: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest" && exit 1)
+	@mkdir -p $(OPENAPI_OUT)
+	@PATH="$$(go env GOPATH)/bin:$$PATH"; \
+	protoc -I $(PROTO_ROOT) -I third_party \
+		--openapiv2_out=$(OPENAPI_OUT) \
+		--openapiv2_opt=logtostderr=true \
+		--openapiv2_opt=allow_merge=true \
+		--openapiv2_opt=merge_file_name=openapi \
+		$(PROTO_ROOT)/video.proto $(PROTO_ROOT)/client_info.proto
+	@if [ -f $(OPENAPI_OUT)/openapi.swagger.json ]; then cp $(OPENAPI_OUT)/openapi.swagger.json $(OPENAPI_OUT)/openapi.json; echo "OpenAPI: $(OPENAPI_SPEC)"; elif [ -f $(OPENAPI_OUT)/openapi.json ]; then echo "OpenAPI: $(OPENAPI_SPEC)"; else echo "Проверьте вывод protoc выше"; fi
+
+# Сборка образа: из локального infra/ (submodule) или клонирование psds-microservice/infra
+proto-build:
+	@echo "Building protoc-go image..."
+	@if [ -f infra/protoc-go.Dockerfile ]; then \
+		echo "Using local infra/ (submodule)..."; \
+		docker build -t $(PROTOC_IMAGE) -f infra/protoc-go.Dockerfile .; \
+	else \
+		echo "Cloning psds-microservice/infra..."; \
+		rm -rf build/infra-repo && mkdir -p build && git clone --depth 1 https://github.com/psds-microservice/infra.git build/infra-repo && \
+		mkdir -p build/infra-repo/infra && cp build/infra-repo/docker-entrypoint.sh build/infra-repo/infra/ && \
+		docker build -t $(PROTOC_IMAGE) -f build/infra-repo/protoc-go.Dockerfile build/infra-repo; \
+	fi
+	@echo "Docker image built"
+
+# Генерация: локальный protoc или Docker
+proto-generate:
+	@PATH="$$(go env GOPATH 2>/dev/null)/bin:$$PATH"; \
+	if command -v protoc >/dev/null 2>&1 && command -v protoc-gen-go >/dev/null 2>&1 && command -v protoc-gen-go-grpc >/dev/null 2>&1; then \
+		$(MAKE) proto-generate-local; \
+	else \
+		$(MAKE) proto-generate-docker; \
+	fi
+
+proto-generate-local:
+	@echo "Generating Go code (local protoc)..."
 	@mkdir -p $(GEN_DIR)
-	@if [ -z "$(HELPY_DIR)" ]; then echo "Run: go mod download && go mod tidy"; exit 1; fi
-	@protoc -I "$(HELPY_DIR)" -I $(PROTO_ROOT) \
-		--go_out=$(GEN_DIR) --go_opt=paths=source_relative \
-		--go-grpc_out=$(GEN_DIR) --go-grpc_opt=paths=source_relative \
-		$(PROTO_ROOT)/video.proto $(PROTO_ROOT)/client_info.proto && \
-		rm -f $(GEN_DIR)/common.pb.go && \
-		echo "Done. Check $(GEN_DIR)/" || (echo "Run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest"; echo "      go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest"; exit 1)
+	@PATH="$$(go env GOPATH)/bin:$$PATH"; \
+	for f in $(PROTO_ROOT)/*.proto; do \
+		[ -f "$$f" ] || continue; \
+		echo "Processing: $$f"; \
+		protoc -I $(PROTO_ROOT) -I third_party \
+			--go_out=. --go_opt=module=$(GO_MODULE) --go-grpc_out=. --go-grpc_opt=module=$(GO_MODULE) "$$f" || exit 1; \
+	done
+	@echo "Generated in $(GEN_DIR)"
 
-# Proto image from psds-microservice/infra; common.proto из helpy (монтируется из go mod)
-proto-docker:
-	@HELPY_DIR=$$(go list -m -f '{{.Dir}}' $(HELPY_MOD) 2>/dev/null); \
-	if [ -z "$$HELPY_DIR" ]; then echo "Run: go mod download"; exit 1; fi; \
-	echo "Generating proto via Docker (infra + helpy)..."; \
-	docker build -t api-gateway-protoc -f infra/protoc-go.Dockerfile . && \
-	docker run --rm -v "$$(pwd):/workspace" -v "$$HELPY_DIR:/helpy:ro" -w /workspace \
-		api-gateway-protoc sh -c 'protoc -I /helpy -I pkg/api_gateway -I /include \
-		--go_out=pkg/gen --go_opt=paths=source_relative \
-		--go-grpc_out=pkg/gen --go-grpc_opt=paths=source_relative \
-		pkg/api_gateway/video.proto pkg/api_gateway/client_info.proto' && \
-	rm -f $(GEN_DIR)/common.pb.go && \
-	echo "Done. Check $(GEN_DIR)/"
-
-# Docker: монтирует helpy из go mod, генерирует только video + client_info (common из helpy)
-proto-docker-cmd:
-	@HELPY_DIR=$$(go list -m -f '{{.Dir}}' $(HELPY_MOD) 2>/dev/null); \
-	if [ -z "$$HELPY_DIR" ]; then echo "Run: go mod download"; exit 1; fi; \
-	docker build -t api-gateway-protoc -f infra/protoc-go.Dockerfile . 2>/dev/null || true; \
-	docker run --rm -v "$$(pwd):/workspace" -v "$$HELPY_DIR:/helpy:ro" -w /workspace api-gateway-protoc sh -c '\
-		protoc -I /helpy -I pkg/api_gateway -I /include --go_out=pkg/gen --go_opt=paths=source_relative \
-		--go-grpc_out=pkg/gen --go-grpc_opt=paths=source_relative \
-		pkg/api_gateway/video.proto pkg/api_gateway/client_info.proto'; \
-	rm -f pkg/gen/common.pb.go; echo "Done."
+proto-generate-docker:
+	@echo "Generating Go code (Docker)..."
+	@mkdir -p $(GEN_DIR)
+	@docker run --rm \
+		-v "$(CURDIR):/workspace" \
+		-w /workspace \
+		--entrypoint sh \
+		$(PROTOC_IMAGE) \
+		-c ' \
+		PROTO_ROOT="$(PROTO_ROOT)" MODULE="$(GO_MODULE)" && \
+		find $$PROTO_ROOT -name "*.proto" 2>/dev/null | while read f; do \
+		echo "Processing $$f" && \
+		protoc -I $$PROTO_ROOT -I third_party -I /include \
+		--go_out=. --go_opt=module=$$MODULE \
+		--go-grpc_out=. --go-grpc_opt=module=$$MODULE \
+		"$$f" || exit 1; \
+		done && echo "Generated in $(GEN_DIR)" \
+		'
+	@echo "Proto files generated"
 
 build: proto
 	@echo "Building $(APP_NAME)..."
@@ -74,7 +111,7 @@ run:
 
 run-dual:
 	@echo "Starting dual server (HTTP:8080 + gRPC:9090)..."
-	go run ./cmd/api-gateway server --debug --grpc-port=9090
+	go run ./cmd/api-gateway api --debug --grpc-port=9090
 
 tidy:
 	go mod tidy
@@ -83,7 +120,9 @@ update:
 	@echo "Updating dependencies..."
 	go get -u ./...
 	go mod tidy
-	make proto
+	go mod vendor
+	$(MAKE) proto
+	$(MAKE) proto-openapi
 	@echo "Done."
 
 test:

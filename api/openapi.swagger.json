@@ -1,0 +1,936 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "video.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "VideoStreamService"
+    },
+    {
+      "name": "ClientInfoService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/clients/active": {
+      "get": {
+        "operationId": "ClientInfoService_ListActiveClients",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/client_infoListClientsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "ClientInfoService"
+        ]
+      }
+    },
+    "/api/v1/clients/connected": {
+      "post": {
+        "operationId": "ClientInfoService_ClientConnected",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonApiResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/client_infoConnectionEvent"
+            }
+          }
+        ],
+        "tags": [
+          "ClientInfoService"
+        ]
+      }
+    },
+    "/api/v1/clients/disconnected": {
+      "post": {
+        "operationId": "ClientInfoService_ClientDisconnected",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonApiResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/client_infoConnectionEvent"
+            }
+          }
+        ],
+        "tags": [
+          "ClientInfoService"
+        ]
+      }
+    },
+    "/api/v1/clients/{clientId}": {
+      "get": {
+        "operationId": "ClientInfoService_GetClientInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/client_infoClientInfo"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClientInfoService"
+        ]
+      },
+      "put": {
+        "operationId": "ClientInfoService_UpdateClientInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonApiResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClientInfoServiceUpdateClientInfoBody"
+            }
+          }
+        ],
+        "tags": [
+          "ClientInfoService"
+        ]
+      }
+    },
+    "/api/v1/video/all-stats": {
+      "get": {
+        "operationId": "VideoStreamService_GetAllStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/video_streamGetAllStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/client/{clientId}/streams": {
+      "get": {
+        "operationId": "VideoStreamService_GetStreamsByClient",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/video_streamGetStreamsByClientResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/frame": {
+      "post": {
+        "operationId": "VideoStreamService_SendFrame",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonApiResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/video_streamSendFrameRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/start": {
+      "post": {
+        "operationId": "VideoStreamService_StartStream",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/video_streamStartStreamResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/video_streamStartStreamRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/stats/{clientId}": {
+      "get": {
+        "operationId": "VideoStreamService_GetStreamStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/video_streamStreamStats"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "streamId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/stop": {
+      "post": {
+        "operationId": "VideoStreamService_StopStream",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/commonApiResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/video_streamStopStreamRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    },
+    "/api/v1/video/stream/{streamId}": {
+      "get": {
+        "operationId": "VideoStreamService_GetStream",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/video_streamActiveStream"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "streamId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VideoStreamService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ClientInfoClientStats": {
+      "type": "object",
+      "properties": {
+        "bytesReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytesSent": {
+          "type": "string",
+          "format": "int64"
+        },
+        "framesReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "averageFps": {
+          "type": "number",
+          "format": "float"
+        },
+        "packetLoss": {
+          "type": "number",
+          "format": "float"
+        },
+        "lastActivity": {
+          "type": "string",
+          "format": "int64"
+        },
+        "networkLatency": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "ClientInfoDeviceInfo": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "osVersion": {
+          "type": "string"
+        },
+        "browser": {
+          "type": "string"
+        },
+        "browserVersion": {
+          "type": "string"
+        },
+        "deviceModel": {
+          "type": "string"
+        },
+        "screenWidth": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "screenHeight": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isMobile": {
+          "type": "boolean"
+        },
+        "isTablet": {
+          "type": "boolean"
+        },
+        "isDesktop": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ClientInfoGeoLocation": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "country": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      }
+    },
+    "ClientInfoQualityPreferences": {
+      "type": "object",
+      "properties": {
+        "preferredQuality": {
+          "type": "string"
+        },
+        "maxBitrate": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxResolution": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "autoAdjust": {
+          "type": "boolean"
+        },
+        "codecPreference": {
+          "type": "string"
+        }
+      }
+    },
+    "ClientInfoSecurityTags": {
+      "type": "object",
+      "properties": {
+        "isAuthenticated": {
+          "type": "boolean"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authMethod": {
+          "type": "string"
+        },
+        "isVpn": {
+          "type": "boolean"
+        },
+        "isProxy": {
+          "type": "boolean"
+        },
+        "threatLevel": {
+          "type": "string"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ClientInfoServiceUpdateClientInfoBody": {
+      "type": "object",
+      "properties": {
+        "clientInfo": {
+          "$ref": "#/definitions/client_infoClientInfo"
+        }
+      }
+    },
+    "client_infoClientInfo": {
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "userAgent": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "connectedAt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "location": {
+          "$ref": "#/definitions/ClientInfoGeoLocation"
+        },
+        "device": {
+          "$ref": "#/definitions/ClientInfoDeviceInfo"
+        },
+        "quality": {
+          "$ref": "#/definitions/ClientInfoQualityPreferences"
+        },
+        "stats": {
+          "$ref": "#/definitions/ClientInfoClientStats"
+        },
+        "security": {
+          "$ref": "#/definitions/ClientInfoSecurityTags"
+        },
+        "customMetadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "client_infoConnectionEvent": {
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "userAgent": {
+          "type": "string"
+        },
+        "connectedAt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "disconnectedAt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "clientInfo": {
+          "$ref": "#/definitions/client_infoClientInfo"
+        },
+        "eventType": {
+          "type": "string"
+        }
+      }
+    },
+    "client_infoListClientsResponse": {
+      "type": "object",
+      "properties": {
+        "clients": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/client_infoClientInfo"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "commonApiResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Общий ответ API"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "video_streamActiveStream": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "cameraName": {
+          "type": "string"
+        },
+        "isRecording": {
+          "type": "boolean"
+        },
+        "isStreaming": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "video_streamGetAllStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/video_streamStreamStats"
+          }
+        },
+        "totalFrames": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalBytes": {
+          "type": "string",
+          "format": "int64"
+        },
+        "averageFps": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "video_streamGetStreamsByClientResponse": {
+      "type": "object",
+      "properties": {
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/video_streamActiveStream"
+          }
+        }
+      }
+    },
+    "video_streamSendFrameRequest": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "frame": {
+          "$ref": "#/definitions/video_streamVideoFrame"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        }
+      }
+    },
+    "video_streamStartStreamRequest": {
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "cameraName": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        }
+      }
+    },
+    "video_streamStartStreamResponse": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "video_streamStopStreamRequest": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "fileSize": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "video_streamStreamStats": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "duration": {
+          "type": "string",
+          "format": "int64"
+        },
+        "framesReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bytesReceived": {
+          "type": "string",
+          "format": "int64"
+        },
+        "averageFps": {
+          "type": "number",
+          "format": "float"
+        },
+        "currentFps": {
+          "type": "number",
+          "format": "float"
+        },
+        "width": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "height": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "codec": {
+          "type": "string"
+        },
+        "isRecording": {
+          "type": "boolean"
+        },
+        "isStreaming": {
+          "type": "boolean"
+        }
+      }
+    },
+    "video_streamVideoFrame": {
+      "type": "object",
+      "properties": {
+        "frameId": {
+          "type": "string"
+        },
+        "frameData": {
+          "type": "string",
+          "format": "byte"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cameraId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "height": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "format": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Запросы для REST API (обратная совместимость)"
+    }
+  }
+}
