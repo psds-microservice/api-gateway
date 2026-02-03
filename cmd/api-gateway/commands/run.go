@@ -39,11 +39,6 @@ func runServerCommand(debug bool, configPath string, grpcPort string) error {
 	return runDualServer(application, grpcSrv, grpcPort, logger, cfg)
 }
 
-func runMigrationsCommand() error {
-	fmt.Println("Migrations not implemented yet")
-	return nil
-}
-
 func runWorkerCommand() error {
 	fmt.Println("Workers not implemented yet")
 	return nil
@@ -73,7 +68,6 @@ API Gateway - Командная строка
 
 Команды:
   server         Запустить сервер (по умолчанию)
-  migrate        Выполнить миграции БД
   worker         Запустить фоновых воркеров
   version        Показать версию
   health-check   Проверить здоровье сервиса
@@ -120,8 +114,6 @@ func handleCommand(args []string) error {
 			}
 		}
 		return runServerCommand(debug, configPath, grpcPort)
-	case "migrate":
-		return runMigrationsCommand()
 	case "worker":
 		return runWorkerCommand()
 	case "version":

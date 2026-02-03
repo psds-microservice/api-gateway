@@ -1,4 +1,4 @@
-.PHONY: help proto build run run-dual tidy test dev clean migrate update
+.PHONY: help proto build run run-dual tidy test dev clean update
 
 APP_NAME = api-gateway
 BIN_DIR = bin
@@ -20,7 +20,6 @@ help:
 	@echo "  make dev        - Run with hot reload (requires air)"
 	@echo "  make tidy       - go mod tidy"
 	@echo "  make test       - Run tests"
-	@echo "  make migrate    - Run DB migrations"
 	@echo "  make update     - Update dependencies (go get -u ./... && go mod tidy)"
 	@echo "  make clean      - Clean build artifacts"
 
@@ -101,6 +100,3 @@ dev:
 clean:
 	rm -rf $(BIN_DIR) coverage.out
 	go clean
-
-migrate:
-	@echo "Migrations: run via database tool or add migrate command"

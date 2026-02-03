@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	mode := flag.String("mode", "server", "Режим: server, migrate, worker, version")
+	mode := flag.String("mode", "server", "Режим: server, worker, version")
 	debug := flag.Bool("debug", false, "Debug режим")
 	configPath := flag.String("config", "./config/config.yaml", "Путь к config.yaml")
 	grpcPort := flag.String("grpc-port", "9090", "Порт gRPC")
@@ -39,8 +39,6 @@ func main() {
 			fmt.Printf("Ошибка запуска сервера: %v\n", err)
 			os.Exit(1)
 		}
-	case "migrate":
-		runMigrationsCommand()
 	case "worker":
 		runWorkerCommand()
 	case "version":
