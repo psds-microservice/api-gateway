@@ -15,29 +15,29 @@ import (
 )
 
 var (
-	apiDebug    bool
-	apiConfig   string
-	apiGrpcPort string
+	serverDebug    bool
+	serverConfig   string
+	serverGrpcPort string
 )
 
-var apiCmd = &cobra.Command{
-	Use:   "api",
-	Short: "Run HTTP + gRPC API server (dual mode)",
-	RunE:  runAPI,
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "Run HTTP + gRPC API server (dual mode, net/http + grpc-gateway)",
+	RunE:  runServer,
 }
 
 func init() {
-	apiCmd.Flags().BoolVar(&apiDebug, "debug", false, "Debug logging")
-	apiCmd.Flags().StringVar(&apiConfig, "config", "", "Config path (ignored, config from .env only)")
-	apiCmd.Flags().StringVar(&apiGrpcPort, "grpc-port", "9090", "gRPC port")
+	serverCmd.Flags().BoolVar(&serverDebug, "debug", false, "Debug logging")
+	serverCmd.Flags().StringVar(&serverConfig, "config", "", "Config path (ignored, config from .env only)")
+	serverCmd.Flags().StringVar(&serverGrpcPort, "grpc-port", "9090", "gRPC port")
 }
 
-func runAPI(cmd *cobra.Command, args []string) error {
+func runServer(cmd *cobra.Command, args []string) error {
 	_ = godotenv.Load()
 
 	var logger *zap.Logger
 	var err error
-	if apiDebug {
+	if serverDebug {
 		logger, err = zap.NewDevelopment()
 	} else {
 		logger, err = zap.NewProduction()
@@ -48,8 +48,8 @@ func runAPI(cmd *cobra.Command, args []string) error {
 	defer logger.Sync()
 
 	cfg := config.Load()
-	if apiGrpcPort != "" {
-		cfg.GRPCPort = apiGrpcPort
+	if serverGrpcPort != "" {
+		cfg.GRPCPort = serverGrpcPort
 	}
 
 	app, err := application.NewAPI(cfg, logger)

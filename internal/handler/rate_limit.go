@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // RateLimitState — простой in-memory rate limiter по IP (скользящее окно, max N запросов).
@@ -65,22 +66,36 @@ func (s *RateLimitState) Allow(ip string) bool {
 	return w.count <= s.limit
 }
 
-// RateLimitedLimitsHandler обрабатывает GET/POST /v1/limits/rate-limited и /api/v1/limits/rate-limited.
-// При превышении лимита возвращает 429.
-func RateLimitedLimitsHandler(limiter *RateLimitState) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ip := c.ClientIP()
+// RateLimitedLimitsHandler возвращает http.HandlerFunc для /v1/limits/rate-limited (net/http).
+func RateLimitedLimitsHandler(limiter *RateLimitState) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ip := clientIP(r)
 		if !limiter.Allow(ip) {
-			c.Header("Retry-After", "1")
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":   "rate limit exceeded",
-				"message": "too many requests",
+			w.Header().Set("Retry-After", "1")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusTooManyRequests)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "rate limit exceeded", "message": "too many requests",
 			})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "rate-limited endpoint",
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "ok", "message": "rate-limited endpoint",
 		})
 	}
+}
+
+func clientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if i := strings.Index(xff, ","); i > 0 {
+			return strings.TrimSpace(xff[:i])
+		}
+		return strings.TrimSpace(xff)
+	}
+	host, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if host != "" {
+		return host
+	}
+	return r.RemoteAddr
 }

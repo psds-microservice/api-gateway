@@ -76,7 +76,7 @@ api-gateway help           # Справка
 
 ## Конфигурация
 
-- YAML: `config/config.yaml` (для dual-режима)
+- Конфигурация только из .env (без YAML)
 - Секция `user_service` — подключение к user-service (host, port, timeouts); при недоступности используется stub-клиент
 - Переменные окружения: см. `.env.example`
 
@@ -95,10 +95,9 @@ api-gateway help           # Справка
 
 ```
 cmd/api-gateway/     # Точка входа, CLI, dual server
-config/              # config.yaml
 internal/
   app/               # Application, Router (Gin)
-  config/            # Config (YAML, env)
+  config/            # Config (.env)
   controller/        # VideoStream, ClientInfo сервисы
   grpc_server/       # gRPC VideoStreamService
   handler/           # HTTP handlers

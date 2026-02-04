@@ -20,7 +20,7 @@ var seedCmd = &cobra.Command{
 func runSeed(cmd *cobra.Command, args []string) error {
 	_ = godotenv.Load()
 
-	cfg := config.LoadConfigFromEnv()
+	cfg := config.Load()
 
 	if err := command.MigrateUp(cfg.DatabaseURL()); err != nil {
 		return fmt.Errorf("migrate: %w", err)

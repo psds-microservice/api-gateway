@@ -7,7 +7,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "api-gateway",
 	Short: "API Gateway: video streaming, client info, HTTP + gRPC",
-	RunE:  runAPI, // по умолчанию — запуск API
+	RunE:  runAPI, // по умолчанию — запуск API (HTTP+gRPC)
 }
 
 // Execute запускает корневую команду (Cobra CLI)
@@ -17,6 +17,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(apiCmd)
+	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(migrateCmd)
 	rootCmd.AddCommand(seedCmd)
 	rootCmd.AddCommand(versionCmd)

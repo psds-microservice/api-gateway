@@ -68,12 +68,16 @@ proto-generate:
 proto-generate-local:
 	@echo "Generating Go code (local protoc)..."
 	@mkdir -p $(GEN_DIR)
+	@command -v protoc-gen-grpc-gateway >/dev/null 2>&1 || (echo "Установите: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest" && exit 1)
 	@PATH="$$(go env GOPATH)/bin:$$PATH"; \
 	for f in $(PROTO_ROOT)/*.proto; do \
 		[ -f "$$f" ] || continue; \
 		echo "Processing: $$f"; \
 		protoc -I $(PROTO_ROOT) -I third_party \
-			--go_out=. --go_opt=module=$(GO_MODULE) --go-grpc_out=. --go-grpc_opt=module=$(GO_MODULE) "$$f" || exit 1; \
+			--go_out=. --go_opt=module=$(GO_MODULE) \
+			--go-grpc_out=. --go-grpc_opt=module=$(GO_MODULE) \
+			--grpc-gateway_out=. --grpc-gateway_opt=module=$(GO_MODULE) \
+			"$$f" || exit 1; \
 	done
 	@echo "Generated in $(GEN_DIR)"
 
@@ -92,6 +96,7 @@ proto-generate-docker:
 		protoc -I $$PROTO_ROOT -I third_party -I /include \
 		--go_out=. --go_opt=module=$$MODULE \
 		--go-grpc_out=. --go-grpc_opt=module=$$MODULE \
+		--grpc-gateway_out=. --grpc-gateway_opt=module=$$MODULE \
 		"$$f" || exit 1; \
 		done && echo "Generated in $(GEN_DIR)" \
 		'
