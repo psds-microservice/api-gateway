@@ -39,6 +39,9 @@ func ApplyEnvOverrides(cfg *YamlConfig) {
 	if p := getEnvInt("USER_SERVICE_PORT", 0); p != 0 {
 		cfg.UserService.Port = p
 	}
+	if p := getEnvInt("USER_SERVICE_HTTP_PORT", 0); p != 0 {
+		cfg.UserService.HTTPPort = p
+	}
 
 	if v := getEnv("DB_HOST", ""); v != "" {
 		cfg.Database.Host = v

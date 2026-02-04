@@ -2,6 +2,7 @@ package grpc_server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/psds-microservice/api-gateway/internal/controller"
+	apperrors "github.com/psds-microservice/api-gateway/internal/errors"
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -16,13 +18,50 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Deps — зависимости gRPC-серверов (DI по аналогии с user-service internal/grpc/server.go).
+// Все сервисы — интерфейсы из controller; создание обоих серверов через NewServersFromDeps(deps).
+type Deps struct {
+	Video      controller.VideoStreamService
+	ClientInfo controller.ClientInfoService
+	Logger     *zap.Logger
+}
+
+// Servers — пара gRPC-серверов (VideoStream + ClientInfo), создаётся из Deps.
+type Servers struct {
+	Video      *VideoStreamServer
+	ClientInfo *ClientInfoServer
+}
+
+// NewServersFromDeps создаёт оба gRPC-сервера из Deps (как NewServer(deps) в user-service).
+func NewServersFromDeps(deps Deps) *Servers {
+	return &Servers{
+		Video:      NewVideoStreamServer(deps.Video, deps.Logger),
+		ClientInfo: NewClientInfoServer(deps.ClientInfo),
+	}
+}
+
 // VideoStreamServer реализует gRPC сервер для видеостримов
 type VideoStreamServer struct {
 	pb.UnimplementedVideoStreamServiceServer
-	service *controller.VideoStreamServiceImpl
+	service controller.VideoStreamService
 	logger  *zap.Logger
 	streams map[string]*StreamSession
 	mu      sync.RWMutex
+}
+
+// mapError маппит доменные ошибки в gRPC status (как в user-service grpc/server.go).
+func mapError(err error) error {
+	if err == nil {
+		return nil
+	}
+	switch {
+	case errors.Is(err, apperrors.ErrStreamNotFound), errors.Is(err, apperrors.ErrClientNotFound):
+		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, apperrors.ErrInvalidRequest):
+		return status.Error(codes.InvalidArgument, err.Error())
+	default:
+		return status.Error(codes.Internal, err.Error())
+	}
 }
 
 // StreamSession управляет сессией стрима
@@ -36,10 +75,10 @@ type StreamSession struct {
 	mu         sync.RWMutex
 }
 
-// NewVideoStreamServer создает gRPC сервер
-func NewVideoStreamServer(service *controller.VideoStreamServiceImpl, logger *zap.Logger) *VideoStreamServer {
+// NewVideoStreamServer создает gRPC сервер (принимает интерфейс controller.VideoStreamService).
+func NewVideoStreamServer(svc controller.VideoStreamService, logger *zap.Logger) *VideoStreamServer {
 	return &VideoStreamServer{
-		service: service,
+		service: svc,
 		logger:  logger,
 		streams: make(map[string]*StreamSession),
 	}
@@ -115,7 +154,7 @@ func (s *VideoStreamServer) StreamVideo(stream pb.VideoStreamService_StreamVideo
 			Metadata:  chunk.Metadata,
 		}
 
-		s.service.SendFrameInternal(chunk.StreamId, chunk.ClientId, "gRPC Client", frame)
+		_, _ = s.service.SendFrameInternal(chunk.StreamId, chunk.ClientId, "gRPC Client", frame)
 
 		ack := &pb.ChunkAck{
 			Status:           "ok",
@@ -136,12 +175,20 @@ func (s *VideoStreamServer) SendFrame(ctx context.Context, req *pb.SendFrameRequ
 	s.logger.Info("gRPC SendFrame called",
 		zap.String("stream_id", req.StreamId),
 		zap.String("client_id", req.ClientId))
-	return s.service.SendFrame(ctx, req)
+	resp, err := s.service.SendFrame(ctx, req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return resp, nil
 }
 
 // StartStream старт стрима
 func (s *VideoStreamServer) StartStream(ctx context.Context, req *pb.StartStreamRequest) (*pb.StartStreamResponse, error) {
-	return s.service.StartStream(ctx, req)
+	resp, err := s.service.StartStream(ctx, req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return resp, nil
 }
 
 // StopStream остановка стрима
@@ -162,7 +209,11 @@ func (s *VideoStreamServer) GetActiveStreams(req *pb.EmptyRequest, stream pb.Vid
 
 // GetStreamStats получение статистики
 func (s *VideoStreamServer) GetStreamStats(ctx context.Context, req *pb.GetStreamStatsRequest) (*pb.StreamStats, error) {
-	return s.service.GetStreamStats(ctx, req)
+	stats, err := s.service.GetStreamStats(ctx, req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return stats, nil
 }
 
 // GetStreamsByClient стримы клиента
@@ -175,7 +226,7 @@ func (s *VideoStreamServer) GetStreamsByClient(ctx context.Context, req *pb.GetS
 func (s *VideoStreamServer) GetStream(ctx context.Context, req *pb.GetStreamRequest) (*pb.ActiveStream, error) {
 	stream := s.service.GetStream(req.StreamId)
 	if stream == nil {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("stream %s not found", req.StreamId))
+		return nil, mapError(apperrors.ErrStreamNotFound)
 	}
 	return stream, nil
 }
@@ -208,7 +259,7 @@ func (s *VideoStreamServer) Run(port string) error {
 	return RunGRPC(port, s, nil, s.logger)
 }
 
-// RunGRPC запускает gRPC сервер с Video и ClientInfo сервисами
+// RunGRPC запускает gRPC сервер с Video и ClientInfo сервисами (принимает Deps или отдельные серверы).
 func RunGRPC(port string, videoServer *VideoStreamServer, clientInfoServer *ClientInfoServer, logger *zap.Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {

@@ -16,7 +16,8 @@ type YamlConfig struct {
 
 	UserService struct {
 		Host              string `yaml:"host"`
-		Port              int    `yaml:"port"`
+		Port              int    `yaml:"port"`      // gRPC порт
+		HTTPPort          int    `yaml:"http_port"` // HTTP порт (для прокси auth: register, login, refresh, logout)
 		DialTimeoutSec    int    `yaml:"dial_timeout_sec"`
 		RequestTimeoutSec int    `yaml:"request_timeout_sec"`
 		MaxRetries        int    `yaml:"max_retries"`
@@ -97,6 +98,7 @@ func GetDefaultYamlConfig() *YamlConfig {
 	cfg.Video.Codec = "h264"
 	cfg.UserService.Host = "localhost"
 	cfg.UserService.Port = 9091
+	cfg.UserService.HTTPPort = 8080
 	cfg.UserService.DialTimeoutSec = 10
 	cfg.UserService.RequestTimeoutSec = 5
 	cfg.UserService.MaxRetries = 3
@@ -108,6 +110,15 @@ func GetDefaultYamlConfig() *YamlConfig {
 func (c *YamlConfig) DSN() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Database.Host, c.Database.Port, c.Database.User, c.Database.Password, c.Database.Name, c.Database.SSLMode)
+}
+
+// UserServiceHTTPURL возвращает базовый URL HTTP API user-service (для прокси auth).
+func (c *YamlConfig) UserServiceHTTPURL() string {
+	port := c.UserService.HTTPPort
+	if port <= 0 {
+		port = 8080
+	}
+	return fmt.Sprintf("http://%s:%d", c.UserService.Host, port)
 }
 
 // DatabaseURL возвращает postgres URL для golang-migrate

@@ -1,10 +1,11 @@
 host: localhost
-port: 8080
+port: 8084
 grpc_port: "9090"
 
 user_service:
   host: localhost
-  port: 9091
+  port: 9091      # gRPC
+  http_port: 8080 # HTTP (auth: register, login, refresh, logout)
   dial_timeout_sec: 10
   request_timeout_sec: 5
   max_retries: 3

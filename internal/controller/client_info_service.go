@@ -8,17 +8,26 @@ import (
 	"go.uber.org/zap"
 )
 
-// ClientInfoServiceImpl реализует сервис информации о клиентах
-type ClientInfoServiceImpl struct {
-	logger *zap.Logger
-	repo   *ClientRepository
+// ClientInfoService — интерфейс сервиса информации о клиентах (gRPC и HTTP хендлеры зависят от него).
+type ClientInfoService interface {
+	ClientConnected(ctx context.Context, req *pb.ConnectionEvent) (*pb.ApiResponse, error)
+	ClientDisconnected(ctx context.Context, req *pb.ConnectionEvent) (*pb.ApiResponse, error)
+	UpdateClientInfo(ctx context.Context, req *pb.UpdateClientRequest) (*pb.ApiResponse, error)
+	GetClientInfo(ctx context.Context, req *pb.GetClientInfoRequest) (*pb.ClientInfo, error)
+	ListActiveClients(ctx context.Context, req *pb.ListClientsRequest) (*pb.ListClientsResponse, error)
 }
 
-// NewClientInfoService создает новый сервис
-func NewClientInfoService(logger *zap.Logger) *ClientInfoServiceImpl {
+// ClientInfoServiceImpl реализует ClientInfoService.
+type ClientInfoServiceImpl struct {
+	logger *zap.Logger
+	repo   ClientStore
+}
+
+// NewClientInfoService создает новый сервис. Принимает ClientStore (DIP).
+func NewClientInfoService(logger *zap.Logger, repo ClientStore) *ClientInfoServiceImpl {
 	return &ClientInfoServiceImpl{
 		logger: logger,
-		repo:   NewClientRepository(),
+		repo:   repo,
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
-	"github.com/psds-microservice/api-gateway/internal/app"
+	"github.com/psds-microservice/api-gateway/internal/application"
 	"github.com/psds-microservice/api-gateway/internal/config"
 	"github.com/psds-microservice/api-gateway/internal/grpc_server"
 	"github.com/spf13/cobra"
@@ -56,26 +56,29 @@ func runAPI(cmd *cobra.Command, args []string) error {
 		cfg = config.GetDefaultConfig()
 	}
 
-	application, err := app.NewApplicationWithConfig(cfg, logger)
+	app, err := application.NewApplicationWithConfig(cfg, logger)
 	if err != nil {
 		return fmt.Errorf("application: %w", err)
 	}
 
-	videoService := app.GetVideoStreamService(application)
-	clientInfoService := app.GetClientInfoService(application)
-	videoGrpcServer := grpc_server.NewVideoStreamServer(videoService, logger)
-	clientInfoGrpcServer := grpc_server.NewClientInfoServer(clientInfoService)
+	// gRPC-серверы из единого Deps (как в user-service NewServer(deps))
+	deps := grpc_server.Deps{
+		Video:      application.GetVideoStreamService(app),
+		ClientInfo: application.GetClientInfoService(app),
+		Logger:     logger,
+	}
+	servers := grpc_server.NewServersFromDeps(deps)
 
 	grpcPort := apiGrpcPort
 	if cfg.GRPCPort != "" {
 		grpcPort = cfg.GRPCPort
 	}
 
-	return runDualServer(application, videoGrpcServer, clientInfoGrpcServer, grpcPort, logger, cfg)
+	return runDualServer(app, servers.Video, servers.ClientInfo, grpcPort, logger, cfg)
 }
 
 func runDualServer(
-	application *app.Application,
+	app *application.Application,
 	videoGrpcServer *grpc_server.VideoStreamServer,
 	clientInfoGrpcServer *grpc_server.ClientInfoServer,
 	grpcPort string,
@@ -90,7 +93,7 @@ func runDualServer(
 
 	// HTTP server
 	go func() {
-		if err := application.Start(); err != nil && err != http.ErrServerClosed {
+		if err := app.Start(); err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP server error", zap.Error(err))
 			select {
 			case httpErrChan <- err:
@@ -133,7 +136,7 @@ func runDualServer(
 	}
 
 	logger.Info("Stopping servers...")
-	if err := application.Stop(); err != nil {
+	if err := app.Stop(); err != nil {
 		logger.Error("HTTP stop error", zap.Error(err))
 	}
 	logger.Info("Server stopped")

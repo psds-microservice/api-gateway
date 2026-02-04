@@ -1,13 +1,16 @@
-package app
+package application
 
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/psds-microservice/api-gateway/api"
 	"github.com/psds-microservice/api-gateway/internal/config"
 	"github.com/psds-microservice/api-gateway/internal/handler"
 	"github.com/psds-microservice/api-gateway/pkg/constants"
@@ -77,6 +80,12 @@ func NewRouter(
 		})
 	})
 
+	// Rate-limited endpoint: /v1/limits/rate-limited (тест test_rate_limiting.py)
+	rateLimiter := handler.NewRateLimitState(5, time.Second)
+	rateLimited := handler.RateLimitedLimitsHandler(rateLimiter)
+	router.GET("/v1/limits/rate-limited", rateLimited)
+	router.POST("/v1/limits/rate-limited", rateLimited)
+
 	apiV1 := router.Group("/api/v1")
 	{
 		// Лимит тела запроса для JSON-кадров (base64 ~1.33x от размера кадра)
@@ -85,6 +94,18 @@ func NewRouter(
 			maxBody = 20 << 20 // 20 MB по умолчанию
 		}
 		apiV1.Use(bodyLimitMiddleware(maxBody))
+
+		// Прокси auth на user-service: POST /api/v1/auth/register, login, refresh, logout
+		if targetURL := cfg.UserServiceHTTPURL(); targetURL != "" {
+			if u, err := url.Parse(targetURL); err == nil {
+				authProxy := httputil.NewSingleHostReverseProxy(u)
+				apiV1.Any("/auth/*path", gin.WrapH(authProxy))
+			}
+		}
+
+		// /api/v1/limits/rate-limited — тот же эндпоинт с rate limiting
+		apiV1.GET("/limits/rate-limited", rateLimited)
+		apiV1.POST("/limits/rate-limited", rateLimited)
 
 		clientInfoHandler.RegisterRoutes(apiV1)
 		videoStreamHandler.RegisterRoutes(apiV1)
@@ -187,9 +208,13 @@ func NewRouter(
 	return cors.New(corsOpts).Handler(router)
 }
 
-// serveOpenAPISpec отдаёт api/openapi.json (из proto: make proto-openapi)
+// serveOpenAPISpec отдаёт api/openapi.json (встроен в бинарь или с диска).
 func serveOpenAPISpec() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if len(api.OpenAPISpec) > 0 {
+			c.Data(http.StatusOK, "application/json", api.OpenAPISpec)
+			return
+		}
 		for _, path := range []string{"api/openapi.swagger.json", "api/openapi.json", "openapi.json"} {
 			data, err := os.ReadFile(path)
 			if err == nil {

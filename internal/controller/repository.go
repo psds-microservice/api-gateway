@@ -7,6 +7,26 @@ import (
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
 )
 
+// StreamStore — абстракция хранилища стримов (Dependency Inversion).
+type StreamStore interface {
+	SaveStream(streamID string, stream *pb.ActiveStream)
+	GetStream(streamID string) *pb.ActiveStream
+	GetStats(streamID string) *pb.StreamStats
+	UpdateStats(streamID string, frame *pb.VideoFrame) *pb.StreamStats
+	RemoveStream(streamID string)
+	GetAllActiveStreams() []*pb.ActiveStream
+	GetAllStreams() []*pb.ActiveStream
+	GetAllStats() []*pb.StreamStats
+}
+
+// ClientStore — абстракция хранилища клиентов.
+type ClientStore interface {
+	SaveClient(client *pb.ClientInfo)
+	GetClient(clientID string) *pb.ClientInfo
+	RemoveClient(clientID string)
+	GetAllClients() []*pb.ClientInfo
+}
+
 // ClientRepository — in-memory репозиторий клиентов
 type ClientRepository struct {
 	clients map[string]*pb.ClientInfo

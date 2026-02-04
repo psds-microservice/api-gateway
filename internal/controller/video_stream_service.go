@@ -6,23 +6,38 @@ import (
 	"sync"
 	"time"
 
+	"github.com/psds-microservice/api-gateway/internal/errors"
 	"github.com/psds-microservice/api-gateway/internal/grpc_client"
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
 	"go.uber.org/zap"
 )
 
-// VideoStreamServiceImpl сервис управления видеостримами
+// VideoStreamService — интерфейс сервиса управления видеостримами (gRPC и HTTP хендлеры зависят от него).
+type VideoStreamService interface {
+	StartStream(ctx context.Context, req *pb.StartStreamRequest) (*pb.StartStreamResponse, error)
+	SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*pb.ApiResponse, error)
+	SendFrameInternal(streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error)
+	StopStream(ctx context.Context, req *pb.StopStreamRequest) (*pb.ApiResponse, error)
+	GetStreamStats(ctx context.Context, req *pb.GetStreamStatsRequest) (*pb.StreamStats, error)
+	GetAllActiveStreams() []*pb.ActiveStream
+	GetAllStats() []*pb.StreamStats
+	GetStreamsByClient(clientID string) []*pb.ActiveStream
+	GetStream(streamID string) *pb.ActiveStream
+	GetTotalStats() map[string]interface{}
+}
+
+// VideoStreamServiceImpl реализует VideoStreamService.
 type VideoStreamServiceImpl struct {
-	repo       *StreamRepository
+	repo       StreamStore
 	logger     *zap.Logger
 	userClient grpc_client.UserServiceClient
 	mu         sync.RWMutex
 }
 
-// NewVideoStreamService создает новый сервис
-func NewVideoStreamService(logger *zap.Logger, userClient grpc_client.UserServiceClient) *VideoStreamServiceImpl {
+// NewVideoStreamService создает новый сервис. Принимает StreamStore (DIP).
+func NewVideoStreamService(logger *zap.Logger, repo StreamStore, userClient grpc_client.UserServiceClient) *VideoStreamServiceImpl {
 	return &VideoStreamServiceImpl{
-		repo:       NewStreamRepository(),
+		repo:       repo,
 		logger:     logger,
 		userClient: userClient,
 	}
@@ -160,7 +175,7 @@ func (s *VideoStreamServiceImpl) StopStream(ctx context.Context, req *pb.StopStr
 func (s *VideoStreamServiceImpl) GetStreamStats(ctx context.Context, req *pb.GetStreamStatsRequest) (*pb.StreamStats, error) {
 	stats := s.repo.GetStats(req.StreamId)
 	if stats == nil {
-		return nil, fmt.Errorf("stream %s not found", req.StreamId)
+		return nil, errors.ErrStreamNotFound
 	}
 	return stats, nil
 }

@@ -15,16 +15,16 @@ import (
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
 )
 
-// VideoStreamHandler обрабатывает HTTP запросы для видеостримов
+// VideoStreamHandler обрабатывает HTTP запросы для видеостримов (зависит от controller.VideoStreamService).
 type VideoStreamHandler struct {
 	logger       *zap.Logger
-	service      *controller.VideoStreamServiceImpl
+	service      controller.VideoStreamService
 	maxFrameSize int // 0 = без лимита (для обратной совместимости)
 }
 
 // NewVideoStreamHandler создает новый хендлер
-func NewVideoStreamHandler(logger *zap.Logger, service *controller.VideoStreamServiceImpl, maxFrameSize int) *VideoStreamHandler {
-	return &VideoStreamHandler{logger: logger, service: service, maxFrameSize: maxFrameSize}
+func NewVideoStreamHandler(logger *zap.Logger, svc controller.VideoStreamService, maxFrameSize int) *VideoStreamHandler {
+	return &VideoStreamHandler{logger: logger, service: svc, maxFrameSize: maxFrameSize}
 }
 
 // RegisterRoutes регистрирует маршруты

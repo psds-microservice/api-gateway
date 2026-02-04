@@ -1,4 +1,4 @@
-package app
+package application
 
 import (
 	"fmt"
@@ -33,8 +33,11 @@ func NewApplicationWithConfig(cfg *config.Config, logger *zap.Logger) (*Applicat
 		return nil, fmt.Errorf("user service client: %w", err)
 	}
 
-	clientInfoService := controller.NewClientInfoService(logger)
-	videoStreamService := controller.NewVideoStreamService(logger, userClient)
+	// Репозитории и сервисы (DIP: сервисы зависят от интерфейсов Store)
+	streamRepo := controller.NewStreamRepository()
+	clientRepo := controller.NewClientRepository()
+	clientInfoService := controller.NewClientInfoService(logger, clientRepo)
+	videoStreamService := controller.NewVideoStreamService(logger, streamRepo, userClient)
 
 	clientInfoHandler := handler.NewClientInfoHandler(logger, clientInfoService)
 	videoStreamHandler := handler.NewVideoStreamHandler(logger, videoStreamService, cfg.Video.MaxFrameSize)
@@ -64,45 +67,45 @@ func NewApplicationWithConfig(cfg *config.Config, logger *zap.Logger) (*Applicat
 }
 
 // GetUserClient возвращает клиент user-service
-func GetUserClient(app *Application) grpc_client.UserServiceClient {
-	return app.userClient
+func GetUserClient(a *Application) grpc_client.UserServiceClient {
+	return a.userClient
 }
 
 // GetVideoStreamService возвращает видеосервис
-func GetVideoStreamService(app *Application) *controller.VideoStreamServiceImpl {
-	return app.videoStreamService
+func GetVideoStreamService(a *Application) *controller.VideoStreamServiceImpl {
+	return a.videoStreamService
 }
 
 // GetClientInfoService возвращает клиентский сервис
-func GetClientInfoService(app *Application) *controller.ClientInfoServiceImpl {
-	return app.clientInfoService
+func GetClientInfoService(a *Application) *controller.ClientInfoServiceImpl {
+	return a.clientInfoService
 }
 
 // GetConfig возвращает конфигурацию
-func GetConfig(app *Application) *config.Config {
-	return app.config
+func GetConfig(a *Application) *config.Config {
+	return a.config
 }
 
 // Start запускает приложение
-func (app *Application) Start() error {
-	app.logger.Info("Starting application",
-		zap.String("address", app.server.Addr),
-		zap.String("user_service", fmt.Sprintf("%s:%d", app.config.UserService.Host, app.config.UserService.Port)))
-	return app.server.ListenAndServe()
+func (a *Application) Start() error {
+	a.logger.Info("Starting application",
+		zap.String("address", a.server.Addr),
+		zap.String("user_service", fmt.Sprintf("%s:%d", a.config.UserService.Host, a.config.UserService.Port)))
+	return a.server.ListenAndServe()
 }
 
 // Stop останавливает приложение
-func (app *Application) Stop() error {
-	app.logger.Info("Stopping application")
-	if app.userClient != nil {
-		if err := app.userClient.Close(); err != nil {
-			app.logger.Error("Failed to close user service client", zap.Error(err))
+func (a *Application) Stop() error {
+	a.logger.Info("Stopping application")
+	if a.userClient != nil {
+		if err := a.userClient.Close(); err != nil {
+			a.logger.Error("Failed to close user service client", zap.Error(err))
 		}
 	}
-	return app.server.Close()
+	return a.server.Close()
 }
 
 // GetRouter возвращает роутер
-func (app *Application) GetRouter() http.Handler {
-	return app.router
+func (a *Application) GetRouter() http.Handler {
+	return a.router
 }

@@ -11,15 +11,15 @@ import (
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
 )
 
-// ClientInfoHandler обрабатывает запросы к информации о клиентах
+// ClientInfoHandler обрабатывает запросы к информации о клиентах (зависит от controller.ClientInfoService).
 type ClientInfoHandler struct {
 	logger  *zap.Logger
-	service *controller.ClientInfoServiceImpl
+	service controller.ClientInfoService
 }
 
 // NewClientInfoHandler создает новый хендлер
-func NewClientInfoHandler(logger *zap.Logger, service *controller.ClientInfoServiceImpl) *ClientInfoHandler {
-	return &ClientInfoHandler{logger: logger, service: service}
+func NewClientInfoHandler(logger *zap.Logger, svc controller.ClientInfoService) *ClientInfoHandler {
+	return &ClientInfoHandler{logger: logger, service: svc}
 }
 
 // RegisterRoutes регистрирует маршруты
