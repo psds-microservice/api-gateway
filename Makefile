@@ -16,7 +16,7 @@ help:
 	@echo ""
 	@echo "Commands:"
 	@echo "  make proto        - Build image and generate proto (like user-service)"
-	@echo "  make proto-build  - Build protoc image from psds-microservice/infra"
+	@echo "  make proto-build  - Build protoc image from vendor infra"
 	@echo "  make proto-generate - Generate Go code (local protoc or Docker)"
 	@echo "  make proto-openapi - Generate OpenAPI/Swagger from proto"
 	@echo "  make build      - Build binary"
@@ -45,15 +45,11 @@ proto-openapi:
 		$(PROTO_ROOT)/video.proto $(PROTO_ROOT)/client_info.proto
 	@if [ -f $(OPENAPI_OUT)/openapi.swagger.json ]; then cp $(OPENAPI_OUT)/openapi.swagger.json $(OPENAPI_OUT)/openapi.json; echo "OpenAPI: $(OPENAPI_SPEC)"; elif [ -f $(OPENAPI_OUT)/openapi.json ]; then echo "OpenAPI: $(OPENAPI_SPEC)"; else echo "Проверьте вывод protoc выше"; fi
 
-# Сборка образа: infra клонируется во временную папку, не в проект
-INFRA_TMP := $(or $(TMPDIR),/tmp)/api-gateway-infra-build
+# Сборка образа: из vendored infra (go mod vendor → vendor/github.com/psds-microservice/infra)
+INFRA_VENDOR := vendor/github.com/psds-microservice/infra
 proto-build:
-	@echo "Building protoc-go image..."
-	@rm -rf "$(INFRA_TMP)" && mkdir -p "$(INFRA_TMP)" && \
-		git clone --depth 1 https://github.com/psds-microservice/infra.git "$(INFRA_TMP)/repo" && \
-		mkdir -p "$(INFRA_TMP)/repo/infra" && cp "$(INFRA_TMP)/repo/docker-entrypoint.sh" "$(INFRA_TMP)/repo/infra/" && \
-		docker build -t $(PROTOC_IMAGE) -f "$(INFRA_TMP)/repo/protoc-go.Dockerfile" "$(INFRA_TMP)/repo" && \
-		rm -rf "$(INFRA_TMP)"
+	@echo "Building protoc-go image (from $(INFRA_VENDOR))..."
+	@docker build -t $(PROTOC_IMAGE) -f $(INFRA_VENDOR)/protoc-go.Dockerfile $(INFRA_VENDOR)
 	@echo "Docker image built"
 
 # Генерация: локальный protoc или Docker
@@ -120,7 +116,9 @@ tidy:
 
 update:
 	@echo "Updating dependencies..."
-	go get -u ./...
+	go get -u ./... \
+        github.com/psds-microservice/helpy \
+        github.com/psds-microservice/infra
 	go mod tidy
 	go mod vendor
 	$(MAKE) proto

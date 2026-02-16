@@ -66,12 +66,13 @@ func (a *API) Run(ctx context.Context) error {
 	}
 	httpBase := fmt.Sprintf("http://%s:%d", host, a.cfg.Port)
 	log.Printf("HTTP server listening on %s", httpAddr)
-	log.Printf("  Swagger UI:    %s/swagger/index.html", httpBase)
+	log.Printf("  Swagger UI:    %s/swagger", httpBase)
 	log.Printf("  Swagger spec:  %s/openapi.json", httpBase)
 	log.Printf("  Health:        %s/health", httpBase)
 	log.Printf("  Ready:         %s/ready", httpBase)
 	log.Printf("  API v1:        %s/api/v1/", httpBase)
 	log.Printf("gRPC server listening on %s", grpcAddr)
+	log.Printf("  gRPC endpoint: %s (reflection enabled)", grpcAddr)
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

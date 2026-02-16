@@ -15,5 +15,5 @@ make proto-openapi
 ## Swagger UI
 
 После запуска сервиса:
-- **Swagger UI:** http://localhost:8080/swagger/index.html
+- **Swagger UI:** http://localhost:8080/swagger
 - **Спека:** http://localhost:8080/openapi.json
