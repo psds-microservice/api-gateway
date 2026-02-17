@@ -1,6 +1,17 @@
 # Binaries
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 /bin/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+/coverage.out
 
 # Env
 .env
@@ -19,9 +30,17 @@ build/
 # Infra не хранится в проекте (клонируется во временную папку при make proto-build)
 infra/
 
+# Proto build artifacts (generated code is committed in pkg/gen/)
+*.pb
+pkg/gen/*/rawdesc.txt
+
 # OS
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
+# Docs
 promt.txt
 /docs_promt/
