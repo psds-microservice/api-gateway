@@ -18,12 +18,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Deps — зависимости gRPC-серверов (DI по аналогии с user-service internal/grpc/server.go).
-// Все сервисы — интерфейсы из controller; создание обоих серверов через NewServersFromDeps(deps).
+// Logger — минимальный интерфейс логгера для Deps (D: зависимость от абстракции).
+type Logger interface {
+	Info(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field)
+	Debug(msg string, fields ...zap.Field)
+}
+
+// Deps — зависимости gRPC-серверов (D: все зависимости — интерфейсы).
 type Deps struct {
 	Video      controller.VideoStreamService
 	ClientInfo controller.ClientInfoService
-	Logger     *zap.Logger
+	Logger     Logger
 }
 
 // Servers — пара gRPC-серверов (VideoStream + ClientInfo), создаётся из Deps.
@@ -44,7 +50,7 @@ func NewServersFromDeps(deps Deps) *Servers {
 type VideoStreamServer struct {
 	pb.UnimplementedVideoStreamServiceServer
 	service controller.VideoStreamService
-	logger  *zap.Logger
+	logger  Logger
 	streams map[string]*StreamSession
 	mu      sync.RWMutex
 }
@@ -75,8 +81,8 @@ type StreamSession struct {
 	mu         sync.RWMutex
 }
 
-// NewVideoStreamServer создает gRPC сервер (принимает интерфейс controller.VideoStreamService).
-func NewVideoStreamServer(svc controller.VideoStreamService, logger *zap.Logger) *VideoStreamServer {
+// NewVideoStreamServer создает gRPC сервер (принимает интерфейсы controller.VideoStreamService и Logger).
+func NewVideoStreamServer(svc controller.VideoStreamService, logger Logger) *VideoStreamServer {
 	return &VideoStreamServer{
 		service: svc,
 		logger:  logger,
@@ -260,7 +266,7 @@ func (s *VideoStreamServer) Run(port string) error {
 }
 
 // RunGRPC запускает gRPC сервер с Video и ClientInfo сервисами (принимает Deps или отдельные серверы).
-func RunGRPC(port string, videoServer *VideoStreamServer, clientInfoServer *ClientInfoServer, logger *zap.Logger) error {
+func RunGRPC(port string, videoServer *VideoStreamServer, clientInfoServer *ClientInfoServer, logger Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
