@@ -115,7 +115,7 @@ func (h *VideoStreamHandler) handleMultipartFrame(c *gin.Context) {
 	}
 
 	metadataStr := c.PostForm("metadata")
-	var metadata map[string]interface{}
+	var metadata map[string]any
 	if metadataStr != "" {
 		_ = json.Unmarshal([]byte(metadataStr), &metadata)
 	}
@@ -164,10 +164,10 @@ func (h *VideoStreamHandler) handleMultipartFrame(c *gin.Context) {
 
 func (h *VideoStreamHandler) handleJSONFrame(c *gin.Context) {
 	var req struct {
-		StreamID string                 `json:"stream_id"`
-		ClientID string                 `json:"client_id"`
-		UserName string                 `json:"user_name"`
-		Frame    map[string]interface{} `json:"frame"`
+		StreamID string         `json:"stream_id"`
+		ClientID string         `json:"client_id"`
+		UserName string         `json:"user_name"`
+		Frame    map[string]any `json:"frame"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Invalid JSON request", zap.Error(err))
@@ -350,7 +350,7 @@ func (h *VideoStreamHandler) GetAllStats(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "ok", "total_streams": len(stats), "total_frames": totalFrames, "total_bytes": totalBytes, "stats": stats, "timestamp": time.Now().Unix()})
 }
 
-func getStringFromMap(m map[string]interface{}, key, defaultValue string) string {
+func getStringFromMap(m map[string]any, key, defaultValue string) string {
 	if m == nil {
 		return defaultValue
 	}
@@ -360,11 +360,11 @@ func getStringFromMap(m map[string]interface{}, key, defaultValue string) string
 	return defaultValue
 }
 
-func getStringFromMapInterface(m map[string]interface{}, key, defaultValue string) string {
+func getStringFromMapInterface(m map[string]any, key, defaultValue string) string {
 	return getStringFromMap(m, key, defaultValue)
 }
 
-func getIntFromMap(m map[string]interface{}, key string, defaultValue int) int {
+func getIntFromMap(m map[string]any, key string, defaultValue int) int {
 	if m == nil {
 		return defaultValue
 	}
@@ -377,7 +377,7 @@ func getIntFromMap(m map[string]interface{}, key string, defaultValue int) int {
 	return defaultValue
 }
 
-func getInt64FromMap(m map[string]interface{}, key string, defaultValue int64) int64 {
+func getInt64FromMap(m map[string]any, key string, defaultValue int64) int64 {
 	if m == nil {
 		return defaultValue
 	}

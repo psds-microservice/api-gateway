@@ -23,7 +23,7 @@ type VideoStreamService interface {
 	GetAllStats() []*pb.StreamStats
 	GetStreamsByClient(clientID string) []*pb.ActiveStream
 	GetStream(streamID string) *pb.ActiveStream
-	GetTotalStats() map[string]interface{}
+	GetTotalStats() map[string]any
 }
 
 // VideoStreamServiceImpl реализует VideoStreamService.
@@ -207,14 +207,14 @@ func (s *VideoStreamServiceImpl) GetActiveStreamsCount() int {
 	return len(s.repo.GetAllActiveStreams())
 }
 
-func (s *VideoStreamServiceImpl) GetTotalStats() map[string]interface{} {
+func (s *VideoStreamServiceImpl) GetTotalStats() map[string]any {
 	allStats := s.repo.GetAllStats()
 	var totalFrames, totalBytes int64
 	for _, stats := range allStats {
 		totalFrames += stats.FramesReceived
 		totalBytes += stats.BytesReceived
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"active_streams": len(allStats),
 		"total_frames":   totalFrames,
 		"total_bytes":    totalBytes,

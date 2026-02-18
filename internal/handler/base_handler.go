@@ -30,7 +30,7 @@ func (h *BaseHandler) BindProtoJSON(c *gin.Context, msg proto.Message) error {
 }
 
 // SuccessResponse успешный ответ
-func (h *BaseHandler) SuccessResponse(c *gin.Context, data interface{}) {
+func (h *BaseHandler) SuccessResponse(c *gin.Context, data any) {
 	marshaler := protojson.MarshalOptions{
 		UseProtoNames:   true,
 		EmitUnpopulated: true,

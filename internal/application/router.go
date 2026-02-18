@@ -70,7 +70,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok", "service": "api-gateway", "version": "1.0.0", "time": time.Now().Unix(),
 		})
 	})
@@ -167,7 +167,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 
 	mux.HandleFunc("/api/v1/status", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"status": "running", "timestamp": time.Now().Unix(),
 			"endpoints": []string{
 				"/api/v1/video/*", "/api/v1/clients/*",
@@ -180,7 +180,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 
 	mux.HandleFunc("/api/v1/test/endpoints", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok", "message": "Available test endpoints",
 			"endpoints": map[string]string{
 				"health": "/health", "status": "/api/v1/status",
@@ -216,7 +216,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 		}
 		streamID := fmt.Sprintf("stream_%s_%d", req.ClientID, time.Now().UnixNano())
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok", "message": "Use this stream_id for testing",
 			"stream_id": streamID, "client_id": req.ClientID,
 		})
