@@ -120,7 +120,7 @@ update:
         github.com/psds-microservice/helpy \
         github.com/psds-microservice/infra
 	go mod tidy
-	GOWORK=off go mod vendor
+	go mod vendor
 	$(MAKE) proto
 	$(MAKE) proto-openapi
 	@echo "Done."
