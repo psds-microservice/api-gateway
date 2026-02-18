@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -90,9 +91,78 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 
 	if targetURL := cfg.UserServiceHTTPURL(); targetURL != "" {
 		if u, err := url.Parse(targetURL); err == nil {
-			authProxy := httputil.NewSingleHostReverseProxy(u)
-			mux.Handle("/api/v1/auth/", authProxy)
+			userProxy := httputil.NewSingleHostReverseProxy(u)
+			mux.Handle("/api/v1/auth/", userProxy)
+			mux.Handle("/api/v1/users/", userProxy)
+			mux.Handle("/api/v1/sessions/", userProxy)
+			// user-service: operators/available, operators/stats, operators/availability, operators/{id}/availability
+			mux.Handle("/api/v1/operators/available", userProxy)
+			mux.Handle("/api/v1/operators/available/", userProxy)
+			mux.Handle("/api/v1/operators/stats", userProxy)
+			mux.Handle("/api/v1/operators/stats/", userProxy)
+			mux.Handle("/api/v1/operators/availability", userProxy)
+			mux.Handle("/api/v1/operators/availability/", userProxy)
+			// operators/{user_id}/availability — один общий прокси для /api/v1/operators/ на user-service
+			// не регистрируем: operator-directory обрабатывает GET/POST/PUT /api/v1/operators и /api/v1/operators/{id}
 		}
+	}
+
+	// Прокси к backend-сервисам (единая точка входа).
+	// /api/v1/operators/ — operator-directory (список, по id); запросы available/stats/availability уже ушли в user-service выше.
+	if targetURL := cfg.UserServiceHTTPURL(); targetURL != "" {
+		if userURL, err := url.Parse(targetURL); err == nil && userURL.Host != "" {
+			if dirURL, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && dirURL.Host != "" {
+				mux.Handle("/api/v1/operators/", operatorsRouter(userURL, dirURL))
+			} else {
+				mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(userURL))
+			}
+		}
+	}
+	if cfg.OperatorDirectoryURL != "" {
+		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
+			// регистрируем только если user-service не задан (иначе уже зарегистрирован operatorsRouter)
+			if cfg.UserServiceHTTPURL() == "" {
+				mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(u))
+				mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+			}
+		}
+	}
+	if u, err := url.Parse(cfg.SessionManagerURL); err == nil && u.Host != "" {
+		mux.Handle("/session/", httputil.NewSingleHostReverseProxy(u))
+	}
+	if u, err := url.Parse(cfg.TicketServiceURL); err == nil && u.Host != "" {
+		mux.Handle("/api/v1/tickets/", httputil.NewSingleHostReverseProxy(u))
+		mux.Handle("/api/v1/tickets", httputil.NewSingleHostReverseProxy(u))
+	}
+	if u, err := url.Parse(cfg.SearchServiceURL); err == nil && u.Host != "" {
+		searchProxy := httputil.NewSingleHostReverseProxy(u)
+		mux.Handle("/search/", searchProxy)
+		mux.Handle("/search", searchProxy)
+	}
+	// /api/v1/operators (без слэша) — operator-directory, если ещё не зарегистрирован operatorsRouter
+	if cfg.UserServiceHTTPURL() == "" && cfg.OperatorDirectoryURL != "" {
+		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
+			mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(u))
+			mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+		}
+	}
+	if cfg.UserServiceHTTPURL() != "" && cfg.OperatorDirectoryURL != "" {
+		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
+			mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+		}
+	}
+	if u, err := url.Parse(cfg.OperatorPoolURL); err == nil && u.Host != "" {
+		mux.Handle("/operator/", httputil.NewSingleHostReverseProxy(u))
+	}
+	if u, err := url.Parse(cfg.NotificationServiceURL); err == nil && u.Host != "" {
+		notifyProxy := httputil.NewSingleHostReverseProxy(u)
+		mux.Handle("/notify/", notifyProxy)
+		mux.Handle("/ws/notify/", notifyProxy)
+	}
+	if u, err := url.Parse(cfg.DataChannelServiceURL); err == nil && u.Host != "" {
+		dataProxy := httputil.NewSingleHostReverseProxy(u)
+		mux.Handle("/data/", dataProxy)
+		mux.Handle("/ws/data/", dataProxy)
 	}
 
 	mux.HandleFunc("/api/v1/status", func(w http.ResponseWriter, _ *http.Request) {
@@ -100,9 +170,10 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"status": "running", "timestamp": time.Now().Unix(),
 			"endpoints": []string{
-				"/api/v1/video/start", "/api/v1/video/frame", "/api/v1/video/stop",
-				"/api/v1/video/active", "/api/v1/video/stats/{client_id}",
-				"/api/v1/video/client/{client_id}/streams", "/api/v1/video/stream/{stream_id}",
+				"/api/v1/video/*", "/api/v1/clients/*",
+				"/api/v1/auth/*", "/api/v1/tickets", "/api/v1/operators",
+				"/session/*", "/search", "/search/*", "/operator/*",
+				"/notify/*", "/ws/notify/*", "/data/*", "/ws/data/*",
 			},
 		})
 	})
@@ -190,4 +261,18 @@ func serveOpenAPISpec() http.HandlerFunc {
 		}
 		http.Error(w, "openapi.json not found. Run: make proto-openapi", http.StatusNotFound)
 	}
+}
+
+// operatorsRouter направляет запросы: .../operators/{id}/availability — в user-service, остальные /api/v1/operators/* — в operator-directory.
+func operatorsRouter(userServiceURL, operatorDirectoryURL *url.URL) http.Handler {
+	userProxy := httputil.NewSingleHostReverseProxy(userServiceURL)
+	dirProxy := httputil.NewSingleHostReverseProxy(operatorDirectoryURL)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimSuffix(r.URL.Path, "/")
+		if strings.HasSuffix(path, "/availability") && len(path) > len("/api/v1/operators/")+len("/availability") {
+			userProxy.ServeHTTP(w, r)
+			return
+		}
+		dirProxy.ServeHTTP(w, r)
+	})
 }
