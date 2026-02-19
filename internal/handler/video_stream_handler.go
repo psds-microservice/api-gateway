@@ -144,7 +144,7 @@ func (h *VideoStreamHandler) handleMultipartFrame(c *gin.Context) {
 		Format:    header.Header.Get("Content-Type"),
 	}
 
-	response, err := h.service.SendFrameInternal(streamID, clientID, userName, frame)
+	response, err := h.service.SendFrameInternal(c.Request.Context(), streamID, clientID, userName, frame)
 	if err != nil {
 		h.logger.Error("Failed to process frame", zap.Error(err))
 		c.JSON(500, gin.H{"error": "Failed to process frame", "message": err.Error()})
@@ -219,7 +219,7 @@ func (h *VideoStreamHandler) handleJSONFrame(c *gin.Context) {
 		Format:    getStringFromMapInterface(req.Frame, "format", "jpeg"),
 	}
 
-	response, err := h.service.SendFrameInternal(req.StreamID, req.ClientID, req.UserName, frame)
+	response, err := h.service.SendFrameInternal(c.Request.Context(), req.StreamID, req.ClientID, req.UserName, frame)
 	if err != nil {
 		h.logger.Error("Failed to process frame", zap.Error(err))
 		c.JSON(500, gin.H{"error": "Failed to process frame", "message": err.Error()})

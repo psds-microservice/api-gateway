@@ -16,7 +16,7 @@ import (
 type VideoStreamService interface {
 	StartStream(ctx context.Context, req *pb.StartStreamRequest) (*pb.StartStreamResponse, error)
 	SendFrame(ctx context.Context, req *pb.SendFrameRequest) (*pb.ApiResponse, error)
-	SendFrameInternal(streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error)
+	SendFrameInternal(ctx context.Context, streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error)
 	StopStream(ctx context.Context, req *pb.StopStreamRequest) (*pb.ApiResponse, error)
 	GetStreamStats(ctx context.Context, req *pb.GetStreamStatsRequest) (*pb.StreamStats, error)
 	GetAllActiveStreams() []*pb.ActiveStream
@@ -87,11 +87,11 @@ func (s *VideoStreamServiceImpl) SendFrame(ctx context.Context, req *pb.SendFram
 	if userName == "" {
 		userName = clientID
 	}
-	return s.SendFrameInternal(streamID, clientID, userName, req.Frame)
+	return s.SendFrameInternal(ctx, streamID, clientID, userName, req.Frame)
 }
 
 // SendFrameInternal внутренний метод обработки кадра
-func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error) {
+func (s *VideoStreamServiceImpl) SendFrameInternal(ctx context.Context, streamID, clientID, userName string, frame *pb.VideoFrame) (*pb.ApiResponse, error) {
 	if frame == nil {
 		return &pb.ApiResponse{Status: "error", Message: "Frame is nil"}, nil
 	}
@@ -107,7 +107,7 @@ func (s *VideoStreamServiceImpl) SendFrameInternal(streamID, clientID, userName 
 
 		userNameToUse := userName
 		if s.userClient != nil {
-			user, err := s.userClient.GetUserByClientID(context.Background(), clientID)
+			user, err := s.userClient.GetUserByClientID(ctx, clientID)
 			if err != nil {
 				return &pb.ApiResponse{Status: "error", Message: fmt.Sprintf("User validation failed: %v", err)}, nil
 			}

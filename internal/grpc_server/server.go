@@ -160,7 +160,7 @@ func (s *VideoStreamServer) StreamVideo(stream pb.VideoStreamService_StreamVideo
 			Metadata:  chunk.Metadata,
 		}
 
-		_, _ = s.service.SendFrameInternal(chunk.StreamId, chunk.ClientId, "gRPC Client", frame)
+		_, _ = s.service.SendFrameInternal(stream.Context(), chunk.StreamId, chunk.ClientId, "gRPC Client", frame)
 
 		ack := &pb.ChunkAck{
 			Status:           "ok",
