@@ -45,8 +45,8 @@ type Config struct {
 	// Backend HTTP base URLs for reverse proxy (optional; empty = proxy not registered).
 	SessionManagerURL      string // e.g. http://localhost:8091
 	TicketServiceURL       string // e.g. http://localhost:8093
-	SearchServiceURL       string // e.g. http://localhost:8096
-	OperatorDirectoryURL   string // e.g. http://localhost:8095
+	SearchServiceURL       string // e.g. http://localhost:8099
+	OperatorDirectoryURL   string // e.g. http://localhost:8098
 	OperatorPoolURL        string // e.g. http://localhost:8094
 	NotificationServiceURL string // e.g. http://localhost:8092
 	DataChannelServiceURL  string // e.g. http://localhost:8097
