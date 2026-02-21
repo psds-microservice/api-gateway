@@ -1,9 +1,12 @@
 package application
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -26,6 +29,24 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+// quietCancelWriter suppresses repeated "context canceled" proxy errors to avoid log flood when many clients time out.
+// quietCancelWriter подавляет повторяющиеся ошибки прокси "context canceled", чтобы не засорять лог при массовых таймаутах.
+type quietCancelWriter struct{ w io.Writer }
+
+func (q quietCancelWriter) Write(p []byte) (n int, err error) {
+	if bytes.Contains(p, []byte("context canceled")) {
+		return len(p), nil
+	}
+	return q.w.Write(p)
+}
+
+// newReverseProxy returns a SingleHostReverseProxy that logs proxy errors except "context canceled" (reduces log spam).
+func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
+	p := httputil.NewSingleHostReverseProxy(target)
+	p.ErrorLog = log.New(quietCancelWriter{w: os.Stderr}, "", 0)
+	return p
+}
 
 // NewRouter создаёт http.Handler с net/http + grpc-gateway (по PROJECT_PROMPT, без Gin).
 func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Server, *grpc_server.VideoStreamServer, *grpc_server.ClientInfoServer, error) {
@@ -91,7 +112,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 
 	if targetURL := cfg.UserServiceHTTPURL(); targetURL != "" {
 		if u, err := url.Parse(targetURL); err == nil {
-			userProxy := httputil.NewSingleHostReverseProxy(u)
+			userProxy := newReverseProxy(u)
 			mux.Handle("/api/v1/auth/", userProxy)
 			mux.Handle("/api/v1/users/", userProxy)
 			mux.Handle("/api/v1/sessions/", userProxy)
@@ -114,7 +135,7 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 			if dirURL, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && dirURL.Host != "" {
 				mux.Handle("/api/v1/operators/", operatorsRouter(userURL, dirURL))
 			} else {
-				mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(userURL))
+				mux.Handle("/api/v1/operators/", newReverseProxy(userURL))
 			}
 		}
 	}
@@ -122,45 +143,45 @@ func NewRouter(cfg *config.Config, logger *zap.Logger) (http.Handler, *grpc.Serv
 		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
 			// регистрируем только если user-service не задан (иначе уже зарегистрирован operatorsRouter)
 			if cfg.UserServiceHTTPURL() == "" {
-				mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(u))
-				mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+				mux.Handle("/api/v1/operators/", newReverseProxy(u))
+				mux.Handle("/api/v1/operators", newReverseProxy(u))
 			}
 		}
 	}
 	if u, err := url.Parse(cfg.SessionManagerURL); err == nil && u.Host != "" {
-		mux.Handle("/session/", httputil.NewSingleHostReverseProxy(u))
+		mux.Handle("/session/", newReverseProxy(u))
 	}
 	if u, err := url.Parse(cfg.TicketServiceURL); err == nil && u.Host != "" {
-		mux.Handle("/api/v1/tickets/", httputil.NewSingleHostReverseProxy(u))
-		mux.Handle("/api/v1/tickets", httputil.NewSingleHostReverseProxy(u))
+		mux.Handle("/api/v1/tickets/", newReverseProxy(u))
+		mux.Handle("/api/v1/tickets", newReverseProxy(u))
 	}
 	if u, err := url.Parse(cfg.SearchServiceURL); err == nil && u.Host != "" {
-		searchProxy := httputil.NewSingleHostReverseProxy(u)
+		searchProxy := newReverseProxy(u)
 		mux.Handle("/search/", searchProxy)
 		mux.Handle("/search", searchProxy)
 	}
 	// /api/v1/operators (без слэша) — operator-directory, если ещё не зарегистрирован operatorsRouter
 	if cfg.UserServiceHTTPURL() == "" && cfg.OperatorDirectoryURL != "" {
 		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
-			mux.Handle("/api/v1/operators/", httputil.NewSingleHostReverseProxy(u))
-			mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+			mux.Handle("/api/v1/operators/", newReverseProxy(u))
+			mux.Handle("/api/v1/operators", newReverseProxy(u))
 		}
 	}
 	if cfg.UserServiceHTTPURL() != "" && cfg.OperatorDirectoryURL != "" {
 		if u, err := url.Parse(cfg.OperatorDirectoryURL); err == nil && u.Host != "" {
-			mux.Handle("/api/v1/operators", httputil.NewSingleHostReverseProxy(u))
+			mux.Handle("/api/v1/operators", newReverseProxy(u))
 		}
 	}
 	if u, err := url.Parse(cfg.OperatorPoolURL); err == nil && u.Host != "" {
-		mux.Handle("/operator/", httputil.NewSingleHostReverseProxy(u))
+		mux.Handle("/operator/", newReverseProxy(u))
 	}
 	if u, err := url.Parse(cfg.NotificationServiceURL); err == nil && u.Host != "" {
-		notifyProxy := httputil.NewSingleHostReverseProxy(u)
+		notifyProxy := newReverseProxy(u)
 		mux.Handle("/notify/", notifyProxy)
 		mux.Handle("/ws/notify/", notifyProxy)
 	}
 	if u, err := url.Parse(cfg.DataChannelServiceURL); err == nil && u.Host != "" {
-		dataProxy := httputil.NewSingleHostReverseProxy(u)
+		dataProxy := newReverseProxy(u)
 		mux.Handle("/data/", dataProxy)
 		mux.Handle("/ws/data/", dataProxy)
 	}
@@ -265,8 +286,8 @@ func serveOpenAPISpec() http.HandlerFunc {
 
 // operatorsRouter направляет запросы: .../operators/{id}/availability — в user-service, остальные /api/v1/operators/* — в operator-directory.
 func operatorsRouter(userServiceURL, operatorDirectoryURL *url.URL) http.Handler {
-	userProxy := httputil.NewSingleHostReverseProxy(userServiceURL)
-	dirProxy := httputil.NewSingleHostReverseProxy(operatorDirectoryURL)
+	userProxy := newReverseProxy(userServiceURL)
+	dirProxy := newReverseProxy(operatorDirectoryURL)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimSuffix(r.URL.Path, "/")
 		if strings.HasSuffix(path, "/availability") && len(path) > len("/api/v1/operators/")+len("/availability") {

@@ -92,7 +92,7 @@ func Load() *Config {
 		GRPCPort: getEnv("GRPC_PORT", "9090"),
 	}
 	cfg.UserService.Host = getEnv("USER_SERVICE_HOST", "localhost")
-	cfg.UserService.Port = getEnvInt("USER_SERVICE_PORT", 9091)
+	cfg.UserService.Port = getEnvInt("USER_SERVICE_PORT", 9090)
 	cfg.UserService.HTTPPort = getEnvInt("USER_SERVICE_HTTP_PORT", 8080)
 	cfg.UserService.DialTimeoutSec = getEnvInt("USER_SERVICE_DIAL_TIMEOUT_SEC", 10)
 	cfg.UserService.RequestTimeoutSec = getEnvInt("USER_SERVICE_REQUEST_TIMEOUT_SEC", 5)
