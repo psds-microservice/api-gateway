@@ -146,36 +146,48 @@ func (r *StreamRepository) UpdateStats(ctx context.Context, streamID string, fra
 	return stats
 }
 
+// GetStats returns a copy so callers cannot race with UpdateStats/RemoveStream.
 func (r *StreamRepository) GetStats(ctx context.Context, streamID string) *pb.StreamStats {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.stats[streamID]
+	s := r.stats[streamID]
+	r.mu.RUnlock()
+	if s == nil {
+		return nil
+	}
+	return proto.Clone(s).(*pb.StreamStats)
 }
 
+// GetAllStats returns copies so callers cannot race with UpdateStats/RemoveStream.
 func (r *StreamRepository) GetAllStats(ctx context.Context) []*pb.StreamStats {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	allStats := make([]*pb.StreamStats, 0, len(r.stats))
+	out := make([]*pb.StreamStats, 0, len(r.stats))
 	for _, stats := range r.stats {
-		allStats = append(allStats, stats)
+		out = append(out, proto.Clone(stats).(*pb.StreamStats))
 	}
-	return allStats
+	r.mu.RUnlock()
+	return out
 }
 
+// GetStream returns a copy so callers cannot race with SaveStream/RemoveStream.
 func (r *StreamRepository) GetStream(ctx context.Context, streamID string) *pb.ActiveStream {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.streams[streamID]
+	s := r.streams[streamID]
+	r.mu.RUnlock()
+	if s == nil {
+		return nil
+	}
+	return proto.Clone(s).(*pb.ActiveStream)
 }
 
+// GetAllStreams returns copies so callers cannot race with SaveStream/RemoveStream.
 func (r *StreamRepository) GetAllStreams(ctx context.Context) []*pb.ActiveStream {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	streams := make([]*pb.ActiveStream, 0, len(r.streams))
+	out := make([]*pb.ActiveStream, 0, len(r.streams))
 	for _, stream := range r.streams {
-		streams = append(streams, stream)
+		out = append(out, proto.Clone(stream).(*pb.ActiveStream))
 	}
-	return streams
+	r.mu.RUnlock()
+	return out
 }
 
 func (r *StreamRepository) RemoveStream(ctx context.Context, streamID string) {
@@ -185,14 +197,15 @@ func (r *StreamRepository) RemoveStream(ctx context.Context, streamID string) {
 	delete(r.stats, streamID)
 }
 
+// GetAllActiveStreams returns copies so callers cannot race with SaveStream/RemoveStream.
 func (r *StreamRepository) GetAllActiveStreams(ctx context.Context) []*pb.ActiveStream {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	activeStreams := make([]*pb.ActiveStream, 0)
+	out := make([]*pb.ActiveStream, 0)
 	for _, stream := range r.streams {
 		if stream.IsRecording || stream.IsStreaming {
-			activeStreams = append(activeStreams, stream)
+			out = append(out, proto.Clone(stream).(*pb.ActiveStream))
 		}
 	}
-	return activeStreams
+	r.mu.RUnlock()
+	return out
 }
