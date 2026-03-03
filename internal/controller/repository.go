@@ -1,30 +1,32 @@
 package controller
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	pb "github.com/psds-microservice/api-gateway/pkg/gen"
+	"google.golang.org/protobuf/proto"
 )
 
 // StreamStore — абстракция хранилища стримов (Dependency Inversion).
 type StreamStore interface {
-	SaveStream(streamID string, stream *pb.ActiveStream)
-	GetStream(streamID string) *pb.ActiveStream
-	GetStats(streamID string) *pb.StreamStats
-	UpdateStats(streamID string, frame *pb.VideoFrame) *pb.StreamStats
-	RemoveStream(streamID string)
-	GetAllActiveStreams() []*pb.ActiveStream
-	GetAllStreams() []*pb.ActiveStream
-	GetAllStats() []*pb.StreamStats
+	SaveStream(ctx context.Context, streamID string, stream *pb.ActiveStream)
+	GetStream(ctx context.Context, streamID string) *pb.ActiveStream
+	GetStats(ctx context.Context, streamID string) *pb.StreamStats
+	UpdateStats(ctx context.Context, streamID string, frame *pb.VideoFrame) *pb.StreamStats
+	RemoveStream(ctx context.Context, streamID string)
+	GetAllActiveStreams(ctx context.Context) []*pb.ActiveStream
+	GetAllStreams(ctx context.Context) []*pb.ActiveStream
+	GetAllStats(ctx context.Context) []*pb.StreamStats
 }
 
 // ClientStore — абстракция хранилища клиентов.
 type ClientStore interface {
-	SaveClient(client *pb.ClientInfo)
-	GetClient(clientID string) *pb.ClientInfo
-	RemoveClient(clientID string)
-	GetAllClients() []*pb.ClientInfo
+	SaveClient(ctx context.Context, client *pb.ClientInfo)
+	GetClient(ctx context.Context, clientID string) *pb.ClientInfo
+	RemoveClient(ctx context.Context, clientID string)
+	GetAllClients(ctx context.Context) []*pb.ClientInfo
 }
 
 // ClientRepository — in-memory репозиторий клиентов
@@ -40,7 +42,7 @@ func NewClientRepository() *ClientRepository {
 	}
 }
 
-func (r *ClientRepository) SaveClient(client *pb.ClientInfo) {
+func (r *ClientRepository) SaveClient(ctx context.Context, client *pb.ClientInfo) {
 	if client == nil {
 		return
 	}
@@ -53,26 +55,32 @@ func (r *ClientRepository) SaveClient(client *pb.ClientInfo) {
 	r.clients[client.ClientId] = client
 }
 
-func (r *ClientRepository) GetClient(clientID string) *pb.ClientInfo {
+// GetClient returns a copy of the client so callers cannot race with SaveClient/RemoveClient.
+func (r *ClientRepository) GetClient(ctx context.Context, clientID string) *pb.ClientInfo {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.clients[clientID]
+	c := r.clients[clientID]
+	r.mu.RUnlock()
+	if c == nil {
+		return nil
+	}
+	return proto.Clone(c).(*pb.ClientInfo)
 }
 
-func (r *ClientRepository) RemoveClient(clientID string) {
+func (r *ClientRepository) RemoveClient(ctx context.Context, clientID string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	delete(r.clients, clientID)
 }
 
-func (r *ClientRepository) GetAllClients() []*pb.ClientInfo {
+// GetAllClients returns copies so callers cannot race with SaveClient/RemoveClient.
+func (r *ClientRepository) GetAllClients(ctx context.Context) []*pb.ClientInfo {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-	clients := make([]*pb.ClientInfo, 0, len(r.clients))
+	out := make([]*pb.ClientInfo, 0, len(r.clients))
 	for _, client := range r.clients {
-		clients = append(clients, client)
+		out = append(out, proto.Clone(client).(*pb.ClientInfo))
 	}
-	return clients
+	r.mu.RUnlock()
+	return out
 }
 
 // StreamRepository — in-memory репозиторий стримов
@@ -90,7 +98,7 @@ func NewStreamRepository() *StreamRepository {
 	}
 }
 
-func (r *StreamRepository) SaveStream(streamID string, stream *pb.ActiveStream) {
+func (r *StreamRepository) SaveStream(ctx context.Context, streamID string, stream *pb.ActiveStream) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.streams[streamID] = stream
@@ -112,7 +120,7 @@ func (r *StreamRepository) SaveStream(streamID string, stream *pb.ActiveStream) 
 	}
 }
 
-func (r *StreamRepository) UpdateStats(streamID string, frame *pb.VideoFrame) *pb.StreamStats {
+func (r *StreamRepository) UpdateStats(ctx context.Context, streamID string, frame *pb.VideoFrame) *pb.StreamStats {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	stats, exists := r.stats[streamID]
@@ -138,13 +146,13 @@ func (r *StreamRepository) UpdateStats(streamID string, frame *pb.VideoFrame) *p
 	return stats
 }
 
-func (r *StreamRepository) GetStats(streamID string) *pb.StreamStats {
+func (r *StreamRepository) GetStats(ctx context.Context, streamID string) *pb.StreamStats {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.stats[streamID]
 }
 
-func (r *StreamRepository) GetAllStats() []*pb.StreamStats {
+func (r *StreamRepository) GetAllStats(ctx context.Context) []*pb.StreamStats {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	allStats := make([]*pb.StreamStats, 0, len(r.stats))
@@ -154,13 +162,13 @@ func (r *StreamRepository) GetAllStats() []*pb.StreamStats {
 	return allStats
 }
 
-func (r *StreamRepository) GetStream(streamID string) *pb.ActiveStream {
+func (r *StreamRepository) GetStream(ctx context.Context, streamID string) *pb.ActiveStream {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.streams[streamID]
 }
 
-func (r *StreamRepository) GetAllStreams() []*pb.ActiveStream {
+func (r *StreamRepository) GetAllStreams(ctx context.Context) []*pb.ActiveStream {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	streams := make([]*pb.ActiveStream, 0, len(r.streams))
@@ -170,14 +178,14 @@ func (r *StreamRepository) GetAllStreams() []*pb.ActiveStream {
 	return streams
 }
 
-func (r *StreamRepository) RemoveStream(streamID string) {
+func (r *StreamRepository) RemoveStream(ctx context.Context, streamID string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	delete(r.streams, streamID)
 	delete(r.stats, streamID)
 }
 
-func (r *StreamRepository) GetAllActiveStreams() []*pb.ActiveStream {
+func (r *StreamRepository) GetAllActiveStreams(ctx context.Context) []*pb.ActiveStream {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	activeStreams := make([]*pb.ActiveStream, 0)
